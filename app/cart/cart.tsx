@@ -21,6 +21,7 @@ import {
   calculateDiscount,
 } from "../../services/voucherService";
 import { useThemeBackground } from "@/hooks/useThemeBackground";
+import { Swipeable } from "react-native-gesture-handler";
 
 
 type CartItem = {
@@ -59,6 +60,12 @@ export default function CartScreen() {
   const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
   const [discountAmount, setDiscountAmount] = useState(0);
   const { bgUrl } = useThemeBackground();
+
+  const getPublicImageUrl = (path?: string | null) => {
+    if (!path) return null;
+    return supabase.storage.from("products").getPublicUrl(path).data.publicUrl;
+  };
+
   const openVoucherModal = async () => {
     if (!userId) return;
 
@@ -169,6 +176,21 @@ export default function CartScreen() {
     setSelectedItem(null);
   };
 
+  const renderRightActions = (item: CartItem) => (
+    <View className="h-full">
+      <Pressable
+        onPress={() => {
+          setSelectedItem(item);
+          setShowDeleteModal(true);
+        }}
+        className="bg-red-600 h-full w-20 items-center justify-center"
+      >
+        <Ionicons name="trash-outline" size={24} color="#fff" />
+        <Text className="text-white text-xs mt-1">Xoá</Text>
+      </Pressable>
+    </View>
+  );
+
 
   /* ================= CHECKOUT ================= */
   const checkout = async () => {
@@ -256,7 +278,7 @@ export default function CartScreen() {
       <>
         {bgUrl && (
           <ImageBackground
-            source={require("../../assets/images/theme-bg-06.png")}
+            source={{ uri: bgUrl }}
             resizeMode="cover"
             className="flex-1"
           >
@@ -280,7 +302,7 @@ export default function CartScreen() {
       {/* ===== BACKGROUND PHỦ TOÀN MÀN ===== */}
       {bgUrl && (
         <ImageBackground
-          source={require("../../assets/images/theme-bg-06.png")}
+          source={{ uri: bgUrl }}
           resizeMode="cover"
           className="absolute inset-0"
         >
@@ -304,101 +326,106 @@ export default function CartScreen() {
                     padding: 16,
                     paddingBottom: 220,
                   }}
-                  renderItem={({ item }) => (
-                    <View className="flex-row mb-4 bg-gray-50 rounded-2xl p-3">
-                      <Image
-                        source={{
-                          uri:
-                            item.products.image ||
-                            "https://via.placeholder.com/100",
-                        }}
-                        className="w-28 h-32 rounded-xl"
-                      />
+                  renderItem={({ item }) => {
+                    const productImageUrl =
+                      getPublicImageUrl(item.products.image) ||
+                      "https://via.placeholder.com/100";
 
-                      <View className="flex-1 ml-3">
-                        <Text className="font-bold text-[#1F4171]">
-                          {item.products.name}
-                        </Text>
-
-                        {item.size && (
-                          <Text className="text-sm text-gray-500 mt-1">
-                            Size: {item.size}
-                          </Text>
-                        )}
-
-                        {item.toppings && item.toppings.length > 0 && (
-                          <Text className="text-sm text-gray-500">
-                            Topping: {item.toppings.map((t) => t.name).join(", ")}
-                          </Text>
-                        )}
-
-                        {item.sugar_level && (
-                          <Text className="text-sm text-gray-500">
-                            Đường: {item.sugar_level}
-                          </Text>
-                        )}
-
-                        {item.ice_level && (
-                          <Text className="text-sm text-gray-500">
-                            Đá: {item.ice_level}
-                          </Text>
-                        )}
-
-                        {item.note && (
-                          <Text
-                            className="text-sm text-gray-400 mt-1 italic"
-                            numberOfLines={2}
-                          >
-                            Ghi chú: {item.note}
-                          </Text>
-                        )}
-
-                        <View className="flex-row items-center justify-between mt-3">
-                          <View className="flex-row items-center">
-                            <Pressable
-                              onPress={() =>
-                                updateQty(item, item.quantity - 1)
-                              }
-                              className="w-8 h-8 border border-gray-300 rounded-full items-center justify-center"
-                            >
-                              <Ionicons name="remove" size={16} />
-                            </Pressable>
-
-                            <Text className="mx-4 font-bold">
-                              {item.quantity}
-                            </Text>
-
-                            <Pressable
-                              onPress={() =>
-                                updateQty(item, item.quantity + 1)
-                              }
-                              className="w-8 h-8 bg-[#1F4171] rounded-full items-center justify-center"
-                            >
-                              <Ionicons name="add" size={16} color="white" />
-                            </Pressable>
-                          </View>
-                        </View>
-
-                        <View className="flex-row justify-between pr-1 mt-2">
-                          <Text className="font-bold text-red-500">
-                            {item.total_price.toLocaleString("vi-VN")}đ
-                          </Text>
-                          <Pressable
-                            onPress={() => {
-                              setSelectedItem(item);
-                              setShowDeleteModal(true);
-                            }}
-                          >
-                            <Ionicons
-                              name="trash-outline"
-                              size={20}
-                              color="#ef4444"
+                    return (
+                      <View className="mb-4 rounded-2xl overflow-hidden">
+                        <Swipeable
+                          renderRightActions={() => renderRightActions(item)}
+                          overshootRight={false}
+                        >
+                          <View className="flex-row bg-gray-50 rounded-2xl p-3">
+                            {/* IMAGE */}
+                            <Image
+                              source={{ uri: productImageUrl }}
+                              className="w-28 h-32 rounded-xl"
                             />
-                          </Pressable>
-                        </View>
+
+                            {/* RIGHT CONTENT */}
+                            <View className="flex-1 ml-3 relative pr-20 pb-8">
+                              {/* NAME */}
+                              <Text className="font-bold text-[#1F4171]">
+                                {item.products.name}
+                              </Text>
+
+                              {/* SIZE */}
+                              {item.size && (
+                                <Text className="text-sm text-gray-500 mt-1">
+                                  Size: {item.size}
+                                </Text>
+                              )}
+
+                              {/* TOPPING */}
+                              {item.toppings && item.toppings.length > 0 && (
+                                <Text className="text-sm text-gray-500">
+                                  Topping: {item.toppings.map((t) => t.name).join(", ")}
+                                </Text>
+                              )}
+
+                              {/* SUGAR + ICE (TOP RIGHT) */}
+                              <View className="absolute top-0 right-0 items-end">
+                                {item.sugar_level && (
+                                  <Text className="text-xs text-gray-500">
+                                    Đường: {item.sugar_level}
+                                  </Text>
+                                )}
+
+                                {item.ice_level && (
+                                  <Text className="text-xs text-gray-500">
+                                    Đá: {item.ice_level}
+                                  </Text>
+                                )}
+                              </View>
+
+                              {/* QUANTITY */}
+                              <View className="flex-row items-center justify-between mt-3">
+                                <View className="flex-row items-center">
+                                  <Pressable
+                                    onPress={() => updateQty(item, item.quantity - 1)}
+                                    className="w-8 h-8 border border-gray-300 rounded-full items-center justify-center"
+                                  >
+                                    <Ionicons name="remove" size={16} />
+                                  </Pressable>
+
+                                  <Text className="mx-4 font-bold">
+                                    {item.quantity}
+                                  </Text>
+
+                                  <Pressable
+                                    onPress={() => updateQty(item, item.quantity + 1)}
+                                    className="w-8 h-8 bg-[#1F4171] rounded-full items-center justify-center"
+                                  >
+                                    <Ionicons name="add" size={16} color="white" />
+                                  </Pressable>
+                                </View>
+                              </View>
+
+                              {/* PRICE */}
+                              <View className="flex-row justify-between pr-1 mt-2">
+                                <Text className="font-bold text-red-500">
+                                  {item.total_price.toLocaleString("vi-VN")}đ
+                                </Text>
+                              </View>
+
+                              {/* NOTE (BOTTOM RIGHT) */}
+                              {item.note && (
+                                <Text
+                                  className="absolute bottom-0 right-0 text-xs text-gray-400 italic max-w-[70%] text-right"
+                                  numberOfLines={2}
+                                >
+                                  Ghi chú: {item.note}
+                                </Text>
+                              )}
+                            </View>
+                          </View>
+
+                        </Swipeable>
                       </View>
-                    </View>
-                  )}
+                    );
+                  }}
                 />
               )}
             </SafeAreaView>

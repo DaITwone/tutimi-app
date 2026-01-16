@@ -75,25 +75,23 @@ export default function ProductDetailScreen() {
 
         setAddingToCart(true);
 
-        const { error } = await supabase
-            .from("cart_items")
-            .insert({
-                user_id: userId,
-                product_id: product.id,
-                size: selectedSize,
-                quantity,
-                base_price: finalPrice,
-                topping_total: toppingTotal,
-                total_price: totalPrice,
-                note: note || null,
-                sugar_level: sugar,
-                ice_level: ice,
-                toppings: selectedToppings.map((t) => ({
-                    id: t.id,
-                    name: t.name,
-                    price: t.price,
-                })),
-            });
+        const { error } = await supabase.from("cart_items").insert({
+            user_id: userId,
+            product_id: product.id,
+            size: selectedSize,
+            quantity,
+            base_price: finalPrice,
+            topping_total: toppingTotal,
+            total_price: totalPrice,
+            note: note || null,
+            sugar_level: sugar,
+            ice_level: ice,
+            toppings: selectedToppings.map((t) => ({
+                id: t.id,
+                name: t.name,
+                price: t.price,
+            })),
+        });
 
         setAddingToCart(false);
 
@@ -103,13 +101,25 @@ export default function ProductDetailScreen() {
             return;
         }
 
-        setShowSuccessToast(true);
+        // ✅ REFRESH CART
         refreshCart();
 
-        setTimeout(() => {
-            setShowSuccessToast(false);
-        }, 3000);
+        // ✅ RESET TOÀN BỘ TUỲ CHỌN
+        setQuantity(1);
+        setSugar("100%");
+        setIce("100%");
+        setSelectedToppings([]);
+        setNote("");
+
+        if (product.categories?.sizes?.length) {
+            setSelectedSize(product.categories.sizes[0]);
+        }
+
+        // ✅ TOAST VẪN HIỆN
+        setShowSuccessToast(true);
+        setTimeout(() => setShowSuccessToast(false), 1500);
     };
+
 
     useEffect(() => {
         const loadToppings = async () => {
@@ -574,8 +584,8 @@ export default function ProductDetailScreen() {
 
                         <Modal visible={showSuccessToast} transparent animationType="fade">
                             <View className="flex-1 justify-end items-end pb-24 m-4">
-                                <View className="bg-black/80 px-6 py-4 rounded-2xl flex-row items-center">
-                                    <Ionicons name="checkmark-circle" size={22} color="#4ade80" />
+                                <View className="bg-green-500 px-6 py-4 rounded-2xl flex-row items-center">
+                                    <Ionicons name="checkmark-circle" size={22} color="white" />
                                     <Text className="text-white font-semibold ml-2">
                                         Đã thêm vào giỏ hàng
                                     </Text>

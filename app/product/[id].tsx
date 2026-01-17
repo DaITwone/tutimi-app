@@ -279,7 +279,11 @@ export default function ProductDetailScreen() {
     const hasSale = product.sale_price && product.sale_price < product.price;
     const toppingTotal = selectedToppings.reduce((sum, t) => sum + t.price, 0);
     const totalPrice = (finalPrice + toppingTotal) * quantity;
-    const productImageUrl = getPublicImageUrl(product.image);
+    const productImageUrl =
+        product.image?.startsWith("file://") || product.image?.startsWith("http")
+            ? product.image
+            : getPublicImageUrl(product.image);
+
 
     return (
         <>

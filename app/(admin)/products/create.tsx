@@ -18,7 +18,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 
 /* ===============================
-   HELPER
+   HELPERS
 ================================ */
 const getPublicImageUrl = (path?: string | null) => {
   if (!path) return null;
@@ -30,11 +30,16 @@ export default function CreateProduct() {
   const [stats, setStats] = useState("");
   const [price, setPrice] = useState("");
   const [salePrice, setSalePrice] = useState("");
+
   const [image, setImage] = useState<string | null>(null);
   const [isLinkMode, setIsLinkMode] = useState(false);
+
   const [categories, setCategories] = useState<any[]>([]);
   const [categoryId, setCategoryId] = useState<string | null>(null);
 
+  /* ===============================
+     FETCH CATEGORIES
+  ================================ */
   useEffect(() => {
     const fetchCategories = async () => {
       const { data } = await supabase
@@ -47,6 +52,19 @@ export default function CreateProduct() {
 
     fetchCategories();
   }, []);
+
+  /* ===============================
+     IMAGE URI LOGIC (QUAN TRỌNG)
+  ================================ */
+  const getImageUri = () => {
+    if (!image) return null;
+
+    if (image.startsWith("file://")) return image; // ảnh local
+    if (image.startsWith("http")) return image; // link ảnh
+
+    // ảnh lưu trong Supabase Storage
+    return getPublicImageUrl(image);
+  };
 
   /* ===============================
      IMAGE PICKER
@@ -64,7 +82,7 @@ export default function CreateProduct() {
   };
 
   /* ===============================
-     CREATE
+     CREATE PRODUCT
   ================================ */
   const handleCreate = async () => {
     if (!name || !price) {
@@ -74,17 +92,27 @@ export default function CreateProduct() {
 
     let imagePath: string | null = null;
 
+    // upload ảnh local
     if (image && image.startsWith("file://")) {
       const blob = await (await fetch(image)).blob();
       const path = `${Date.now()}.png`;
 
-      await supabase.storage.from("products").upload(path, blob, {
-        upsert: true,
-        contentType: "image/png",
-      });
+      const { error } = await supabase.storage
+        .from("products")
+        .upload(path, blob, {
+          upsert: true,
+          contentType: "image/png",
+        });
+
+      if (error) {
+        Alert.alert("Lỗi upload ảnh", error.message);
+        return;
+      }
 
       imagePath = path;
-    } else if (image) {
+    }
+    // link ảnh
+    else if (image) {
       imagePath = image;
     }
 
@@ -115,13 +143,8 @@ export default function CreateProduct() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
-        {/* BACKDROP – TAP NGOÀI LÀ TẮT KEYBOARD */}
-        <Pressable
-          style={{ flex: 1 }}
-          onPress={Keyboard.dismiss}
-        >
-          {/* CONTENT WRAPPER – CHẶN TOUCH LAN RA BACKDROP */}
-          <Pressable onPress={() => {}} style={{ flex: 1 }}>
+        <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
+          <Pressable style={{ flex: 1 }} onPress={() => {}}>
             <ScrollView
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
@@ -151,11 +174,7 @@ export default function CreateProduct() {
                   <View className="h-40 rounded-2xl bg-gray-100 overflow-hidden items-center justify-center">
                     {image ? (
                       <Image
-                        source={{
-                          uri: image.startsWith("file://")
-                            ? image
-                            : getPublicImageUrl(image) || image,
-                        }}
+                        source={{ uri: getImageUri()! }}
                         className="w-full h-full"
                         resizeMode="cover"
                       />
@@ -180,7 +199,7 @@ export default function CreateProduct() {
 
                     <Pressable
                       onPress={() => {
-                        setImage("");
+                        setImage(null); // ⚠️ KHÔNG DÙNG ""
                         setIsLinkMode(true);
                       }}
                       className="flex-1 border border-gray-200 rounded-xl py-2 items-center"
@@ -198,6 +217,7 @@ export default function CreateProduct() {
                     className="border border-gray-200 rounded-xl p-3 mb-3"
                     autoCapitalize="none"
                     autoCorrect={false}
+                    value={image || ""}
                     onChangeText={setImage}
                   />
                 )}
@@ -247,9 +267,7 @@ export default function CreateProduct() {
                         key={cat.id}
                         onPress={() => setCategoryId(cat.id)}
                         className={`px-4 py-2 rounded-full ${
-                          active
-                            ? "bg-[#1b4f94]"
-                            : "bg-gray-200"
+                          active ? "bg-[#1b4f94]" : "bg-gray-200"
                         }`}
                       >
                         <Text

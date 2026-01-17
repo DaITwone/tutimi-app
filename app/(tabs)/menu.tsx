@@ -211,7 +211,11 @@ export default function MenuScreen() {
                 renderItem={({ item }) => {
                   const finalPrice = item.sale_price ?? item.price;
                   const hasSale = item.sale_price && item.sale_price < item.price;
-                  const imageUrl = getPublicImageUrl(item.image);
+                  const imageUrl =
+                    item.image?.startsWith("file://") || item.image?.startsWith("http")
+                      ? item.image
+                      : getPublicImageUrl(item.image);
+
 
                   return (
                     <Pressable

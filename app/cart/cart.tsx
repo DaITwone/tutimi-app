@@ -328,8 +328,12 @@ export default function CartScreen() {
                   }}
                   renderItem={({ item }) => {
                     const productImageUrl =
-                      getPublicImageUrl(item.products.image) ||
-                      "https://via.placeholder.com/100";
+                      item.products.image?.startsWith("file://") ||
+                        item.products.image?.startsWith("http")
+                        ? item.products.image
+                        : getPublicImageUrl(item.products.image) ||
+                        "https://via.placeholder.com/100";
+
 
                     return (
                       <View className="mb-4 rounded-2xl overflow-hidden">
@@ -340,7 +344,7 @@ export default function CartScreen() {
                           <View className="flex-row bg-white/85 rounded-2xl p-3">
                             {/* IMAGE */}
                             <Image
-                            
+
                               source={{ uri: productImageUrl }}
                               className="w-28 h-32 rounded-xl"
                             />

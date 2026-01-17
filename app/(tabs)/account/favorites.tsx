@@ -23,6 +23,7 @@ type Product = {
     price: number;
     sale_price: number | null;
     image: string | null;
+    stats: string | null;
 };
 
 type FavoriteItem = {
@@ -63,7 +64,7 @@ export default function FavoritesScreen() {
                     name,
                     price,
                     sale_price,
-                    image
+                    image, stats
                 )
             `)
             .eq("user_id", userId)
@@ -77,7 +78,7 @@ export default function FavoritesScreen() {
         }
 
         console.log("Favorites data:", JSON.stringify(data, null, 2));
-        // setFavorites(data || []);
+        setFavorites(data || []);
         setLoading(false);
     };
 
@@ -95,6 +96,8 @@ export default function FavoritesScreen() {
 
         setFavorites((prev) => prev.filter((f) => f.id !== favoriteId));
     };
+
+
 
     /* ===== CHƯA ĐĂNG NHẬP ===== */
     if (!userId && !loading) {
@@ -185,6 +188,13 @@ export default function FavoritesScreen() {
                                     }
 
                                     const p = item.products;
+                                    const imageUrl =
+                                        p.image &&
+                                        (p.image.startsWith("file://") || p.image.startsWith("http")
+                                            ? p.image
+                                            : supabase.storage
+                                                .from("products")
+                                                .getPublicUrl(p.image).data.publicUrl);
 
                                     return (
                                         <View
@@ -194,9 +204,9 @@ export default function FavoritesScreen() {
                                             <View className="flex-row">
                                                 {/* IMAGE */}
 
-                                                {p.image && (
+                                                {imageUrl && (
                                                     <Image
-                                                        source={{ uri: p.image }}
+                                                        source={{ uri: imageUrl }}
                                                         className="w-20 h-20 rounded-xl"
                                                         resizeMode="cover"
                                                     />
@@ -207,6 +217,9 @@ export default function FavoritesScreen() {
                                                 <View className="ml-3 flex-1">
                                                     <Text className="font-semibold text-blue-900">
                                                         {p.name}
+                                                    </Text>
+                                                    <Text className="text-sm text-gray-500">
+                                                        {p.stats}
                                                     </Text>
 
                                                     <View className="flex-row items-center mt-1">

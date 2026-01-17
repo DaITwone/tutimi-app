@@ -223,7 +223,11 @@ export default function AdminProducts() {
   );
 
   const renderItem = ({ item }: any) => {
-    const imageUrl = getPublicImageUrl(item.image);
+    const imageUrl =
+      item.image?.startsWith("file://") || item.image?.startsWith("http")
+        ? item.image
+        : getPublicImageUrl(item.image);
+
 
     return (
       <Animated.View style={{ opacity: fadeAnim }}>
@@ -400,7 +404,7 @@ export default function AdminProducts() {
                   </Pressable>
 
                   <Pressable
-                    onPress={() => setImage("")}
+                    onPress={() => setImage(null)}
                     className="flex-1 border border-gray-200 rounded-xl py-2 items-center"
                   >
                     <Text className="text-sm text-[#082841]">
@@ -414,6 +418,7 @@ export default function AdminProducts() {
                 <TextInput
                   placeholder="Dán link ảnh (https://...)"
                   className="border border-gray-200 rounded-xl p-3 mb-3"
+                  value={image || ""}
                   onChangeText={setImage}
                 />
               )}

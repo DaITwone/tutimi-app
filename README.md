@@ -1,4 +1,4 @@
-# ☕ Coffee & Tea App
+# ☕ TUTIMI Coffee & Tea App
 
 > A mobile-first application built with Expo, React Native, TypeScript, and Supabase.
 

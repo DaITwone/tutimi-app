@@ -14,14 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { supabase } from "@/lib/supabaseClient";
 import { fetchMenu, MenuSection } from "../../services/menuService";
-
-/* ===============================
-   IMAGE HELPER
-================================ */
-const getPublicImageUrl = (path?: string | null) => {
-  if (!path) return null;
-  return supabase.storage.from("products").getPublicUrl(path).data.publicUrl;
-};
+import { getPublicImageUrl } from "@/lib/storage";
 
 /* ===============================
    CATEGORY PILL (ANIMATED)
@@ -72,7 +65,7 @@ export default function MenuScreen() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [themeBg, setThemeBg] = useState<string | null>(null);
-  const bgUrl = themeBg ? getPublicImageUrl(themeBg) : null;
+  const bgUrl = getPublicImageUrl(themeBg);
 
   useEffect(() => {
     let mounted = true;
@@ -211,11 +204,7 @@ export default function MenuScreen() {
                 renderItem={({ item }) => {
                   const finalPrice = item.sale_price ?? item.price;
                   const hasSale = item.sale_price && item.sale_price < item.price;
-                  const imageUrl =
-                    item.image?.startsWith("file://") || item.image?.startsWith("http")
-                      ? item.image
-                      : getPublicImageUrl(item.image);
-
+                  const imageUrl = getPublicImageUrl(item.image);
 
                   return (
                     <Pressable

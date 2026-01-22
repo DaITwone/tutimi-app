@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "@/lib/supabaseClient";
 import { Linking } from "react-native";
 import { useThemeBackground } from "@/hooks/useThemeBackground";
+import { getPublicImageUrl } from "@/lib/storage";
 
 
 type NewsDetail = {
@@ -32,6 +33,7 @@ export default function NewsDetailScreen() {
     const [news, setNews] = useState<NewsDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const { bgUrl } = useThemeBackground();
+
 
     useEffect(() => {
         if (id) fetchNewsDetail();
@@ -71,6 +73,8 @@ export default function NewsDetailScreen() {
         );
     }
 
+    const imageUrl = getPublicImageUrl(news.image);
+
     return (
         <View className="flex-1 bg-white">
             {/* HEADER */}
@@ -106,9 +110,9 @@ export default function NewsDetailScreen() {
                     <View className="absolute inset-0 bg-white/90" />
                     <ScrollView showsVerticalScrollIndicator={false}>
                         {/* IMAGE */}
-                        {news.image && (
+                        {imageUrl && (
                             <Image
-                                source={{ uri: news.image }}
+                                source={{ uri: imageUrl }}
                                 className="w-full"
                                 style={{ height: 500 }}
                                 resizeMode="cover"

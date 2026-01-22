@@ -15,6 +15,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../lib/supabaseClient";
+import { getPublicImageUrl } from "../../lib/storage";
+
 
 const { width } = Dimensions.get("window");
 
@@ -52,8 +54,6 @@ export default function HomeScreen() {
     const { bgUrl } = useThemeBackground();
     const { backgroundUrl, logoUrl } = useBrandingAssets();
     const [bestSellers, setBestSellers] = useState<BestSellerProduct[]>([]);
-    const isLightBackground = bgUrl?.includes("theme-bg-06");
-
 
     useEffect(() => {
         fetchBestSellers();
@@ -69,21 +69,6 @@ export default function HomeScreen() {
 
         if (data) setBestSellers(data);
     }
-
-    const getProductImageUrl = (path?: string | null) => {
-        if (!path) return null;
-        return supabase.storage
-            .from("products")
-            .getPublicUrl(path).data.publicUrl;
-    };
-
-
-    const getBannerUrl = (path?: string | null) => {
-        if (!path) return null;
-        return supabase.storage
-            .from("banners")
-            .getPublicUrl(path).data.publicUrl;
-    };
 
     useEffect(() => {
         fetchBanners();
@@ -260,7 +245,7 @@ export default function HomeScreen() {
                                                 }
                                             >
                                                 {banners.map((item) => {
-                                                    const uri = getBannerUrl(item.image);
+                                                    const uri = getPublicImageUrl(item.image);
 
                                                     return uri ? (
                                                         <Image
@@ -294,7 +279,8 @@ export default function HomeScreen() {
 
                                             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                                                 {bestSellers.map((item) => {
-                                                    const imageUrl = getProductImageUrl(item.image);
+                                                    const imageUrl = getPublicImageUrl(item.image);
+
                                                     return (
                                                         <Pressable
                                                             key={item.id}
@@ -303,7 +289,7 @@ export default function HomeScreen() {
                                                                 router.push({
                                                                     pathname: "/product/[id]",
                                                                     params: { id: item.id },
-                                                                    
+
                                                                 })
                                                             }
                                                         >
@@ -338,47 +324,49 @@ export default function HomeScreen() {
                                             </Pressable>
 
                                             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                                                {homeNews.map((item) => (
-                                                    <Pressable
-                                                        key={item.id}
-                                                        className="mr-4 w-64"
-                                                        onPress={() =>
-                                                            router.push({
-                                                                pathname: "/new/[id]",
-                                                                params: { id: item.id },
-                                                            })
-                                                        }
-                                                    >
-                                                        {item.image && (
-                                                            <Image
-                                                                source={{ uri: item.image }}
-                                                                className="w-full h-80 rounded-2xl"
-                                                            />
-                                                        )}
+                                                {homeNews.map((item) => {
+                                                    const imageUrl = getPublicImageUrl(item.image);
 
-                                                        <View className="mt-2">
-                                                            <View
-                                                                className={`self-start px-2 py-0.5 rounded ${item.type === "Tin Tức"
-                                                                    ? "bg-blue-500"
-                                                                    : "bg-yellow-400"
-                                                                    }`}
-                                                            >
-                                                                <Text className="text-[10px] font-semibold text-white">
-                                                                    {item.type === "Tin Tức"
-                                                                        ? "TIN TỨC"
-                                                                        : "ƯU ĐÃI"}
+                                                    return (
+                                                        <Pressable
+                                                            key={item.id}
+                                                            className="mr-4 w-64"
+                                                            onPress={() =>
+                                                                router.push({
+                                                                    pathname: "/new/[id]",
+                                                                    params: { id: item.id },
+                                                                })
+                                                            }
+                                                        >
+                                                            {imageUrl && (
+                                                                <Image
+                                                                    source={{ uri: imageUrl }}
+                                                                    className="w-full h-80 rounded-2xl"
+                                                                />
+                                                            )}
+
+                                                            <View className="mt-2">
+                                                                <View
+                                                                    className={`self-start px-2 py-0.5 rounded ${item.type === "Tin Tức"
+                                                                            ? "bg-blue-500"
+                                                                            : "bg-yellow-400"
+                                                                        }`}
+                                                                >
+                                                                    <Text className="text-[10px] font-semibold text-white">
+                                                                        {item.type === "Tin Tức" ? "TIN TỨC" : "ƯU ĐÃI"}
+                                                                    </Text>
+                                                                </View>
+
+                                                                <Text
+                                                                    className="mt-1 text-base font-semibold text-[#1b4f94]"
+                                                                    numberOfLines={2}
+                                                                >
+                                                                    {item.title}
                                                                 </Text>
                                                             </View>
-
-                                                            <Text
-                                                                className="mt-1 text-base font-semibold text-[#1b4f94]"
-                                                                numberOfLines={2}
-                                                            >
-                                                                {item.title}
-                                                            </Text>
-                                                        </View>
-                                                    </Pressable>
-                                                ))}
+                                                        </Pressable>
+                                                    );
+                                                })}
                                             </ScrollView>
                                         </View>
                                     </View>

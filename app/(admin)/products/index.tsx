@@ -20,15 +20,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Swipeable } from "react-native-gesture-handler";
-
-
-/* ===============================
-   HELPER
-================================ */
-const getPublicImageUrl = (path?: string | null) => {
-  if (!path) return null;
-  return supabase.storage.from("products").getPublicUrl(path).data.publicUrl;
-};
+import { getPublicImageUrl } from "@/lib/storage";
 
 /* ===============================
    CATEGORY PILL
@@ -223,11 +215,7 @@ export default function AdminProducts() {
   );
 
   const renderItem = ({ item }: any) => {
-    const imageUrl =
-      item.image?.startsWith("file://") || item.image?.startsWith("http")
-        ? item.image
-        : getPublicImageUrl(item.image);
-
+    const imageUrl = getPublicImageUrl(item.image);
 
     return (
       <Animated.View style={{ opacity: fadeAnim }}>
@@ -318,7 +306,7 @@ export default function AdminProducts() {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              className="px-4 py-3 mb-2"
+              className="px-4 py-3 mb-2 shadow-sm"
             >
               <CategoryPill
                 label="Tất cả"

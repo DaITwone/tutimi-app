@@ -12,6 +12,7 @@ import {
 import { supabase } from "../../lib/supabaseClient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useThemeBackground } from "@/hooks/useThemeBackground";
+import { getPublicImageUrl } from "@/lib/storage";
 
 type News = {
   type: string;
@@ -78,56 +79,59 @@ export default function NewsScreen() {
                 <View className="absolute inset-0 bg-white/80" />
 
                 <ScrollView showsVerticalScrollIndicator={false} className="px-5 pt-4">
-                  {news.map((item) => (
-                    <Pressable
-                      key={item.id}
-                      className="mb-6"
-                      onPress={() =>
-                        router.push({
-                          pathname: "/new/[id]",
-                          params: { id: item.id },
-                        })
-                      }
-                    >
-                      {/* Image */}
-                      {item.image && (
-                        <Image
-                          source={{ uri: item.image }}
-                          className="w-full rounded-lg"
-                          style={{ height: 480 }}
-                          resizeMode="cover"
-                        />
-                      )}
+                  {news.map((item) => {
+                    const imageUrl = getPublicImageUrl(item.image);
 
-                      {/* Content */}
-                      <View className="mt-3">
-                        <View
-                          className={`self-start px-3 py-1 rounded-md ${item.type === "Tin Tức"
-                            ? "bg-blue-500"
-                            : "bg-yellow-400"
-                            }`}
-                        >
-                          <Text className="text-xs font-semibold text-white">
-                            {item.type === "Tin Tức" ? "TIN TỨC" : "ƯU ĐÃI"}
-                          </Text>
-                        </View>
-
-                        <Text className="mt-1.5 text-xl font-bold text-blue-900">
-                          {item.title}
-                        </Text>
-
-                        {item.description && (
-                          <Text className="text-gray-600 leading-5">
-                            {item.description}
-                          </Text>
+                    return (
+                      <Pressable
+                        key={item.id}
+                        className="mb-6"
+                        onPress={() =>
+                          router.push({
+                            pathname: "/new/[id]",
+                            params: { id: item.id },
+                          })
+                        }
+                      >
+                        {imageUrl && (
+                          <Image
+                            source={{ uri: imageUrl }}
+                            className="w-full rounded-lg"
+                            style={{ height: 480 }}
+                            resizeMode="cover"
+                          />
                         )}
 
-                        <Text className="text-xs text-gray-400 mt-1">
-                          {formatDate(item.created_at)}
-                        </Text>
-                      </View>
-                    </Pressable>
-                  ))}
+                        <View className="mt-3">
+                          <View
+                            className={`self-start px-3 py-1 rounded-md ${item.type === "Tin Tức"
+                                ? "bg-blue-500"
+                                : "bg-yellow-400"
+                              }`}
+                          >
+                            <Text className="text-xs font-semibold text-white">
+                              {item.type === "Tin Tức" ? "TIN TỨC" : "ƯU ĐÃI"}
+                            </Text>
+                          </View>
+
+                          <Text className="mt-1.5 text-xl font-bold text-blue-900">
+                            {item.title}
+                          </Text>
+
+                          {item.description && (
+                            <Text className="text-gray-600 leading-5">
+                              {item.description}
+                            </Text>
+                          )}
+
+                          <Text className="text-xs text-gray-400 mt-1">
+                            {formatDate(item.created_at)}
+                          </Text>
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+
 
                   {news.length === 0 && (
                     <View className="items-center mt-20">

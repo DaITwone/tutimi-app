@@ -150,7 +150,7 @@ export default function MenuScreen() {
           <View className="flex-1 bg-white/80">
             <SafeAreaView edges={["top"]} className="bg-transparent">
               {/* ===== PAGE HEADER (Non-sticky) ===== */}
-              <View className="px-4 pb-3 bg-white/80">
+              <View className="px-4 pb-3">
                 <Text className="text-2xl font-bold text-[#1F4171]">
                   Thực đơn
                 </Text>
@@ -193,7 +193,7 @@ export default function MenuScreen() {
 
                 /* ===== SECTION HEADER ===== */
                 renderSectionHeader={({ section }) => (
-                  <View className="px-4 pt-6 pb-2 mb-2 bg-white/80">
+                  <View className="px-4 pt-6 pb-2 mb-2">
                     <Text className="text-gray-500 font-semibold">
                       ✨{section.title}✨
                     </Text>

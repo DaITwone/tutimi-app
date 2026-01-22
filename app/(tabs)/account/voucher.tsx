@@ -222,7 +222,7 @@ export default function VoucherScreen() {
                         className={`
                         rounded-2xl p-4
                         ${isLightBackground
-                          ? "bg-white/85 border shadow"
+                          ? "bg-white/85 shadow-sm"
                           : "bg-white/85"}
                       `}
                       >

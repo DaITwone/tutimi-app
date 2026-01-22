@@ -46,7 +46,6 @@ type BestSellerProduct = {
 export default function HomeScreen() {
     const scrollRef = useRef<ScrollView>(null);
     const { user, isLoggedIn, loading } = useAuth();
-
     const [index, setIndex] = useState(0);
     const [banners, setBanners] = useState<Banner[]>([]);
     const [homeNews, setHomeNews] = useState<HomeNews[]>([]);
@@ -136,6 +135,7 @@ export default function HomeScreen() {
         return () => clearInterval(timer);
     }, [banners.length]);
 
+    const avatarUrl = getPublicImageUrl(user?.avatar_url);
 
     /* ================= RENDER ================= */
     return (
@@ -168,12 +168,13 @@ export default function HomeScreen() {
                                             >
                                                 <Image
                                                     source={
-                                                        user.avatar_url
-                                                            ? { uri: user.avatar_url }
+                                                        avatarUrl
+                                                            ? { uri: avatarUrl }
                                                             : require("../../assets/images/avt.jpg")
                                                     }
                                                     className="w-16 h-16 rounded-full"
                                                 />
+
                                             </Pressable>
 
                                             <View className="ml-3 flex-1">
@@ -348,8 +349,8 @@ export default function HomeScreen() {
                                                             <View className="mt-2">
                                                                 <View
                                                                     className={`self-start px-2 py-0.5 rounded ${item.type === "Tin Tức"
-                                                                            ? "bg-blue-500"
-                                                                            : "bg-yellow-400"
+                                                                        ? "bg-blue-500"
+                                                                        : "bg-yellow-400"
                                                                         }`}
                                                                 >
                                                                     <Text className="text-[10px] font-semibold text-white">

@@ -9,6 +9,8 @@ export type Voucher = {
   discount_value: number;
   min_order_value: number | null;
   for_new_user: boolean;
+  start_hour: number | null;
+  end_hour: number | null;
 };
 
 /* ================= CHECK USER IS NEW ================= */
@@ -21,6 +23,21 @@ export const isNewUser = async (userId: string): Promise<boolean> => {
 
   return (count ?? 0) === 0;
 };
+
+/* ================= CHECK TIME VOUCHER ================= */
+const isVoucherValidByTime = (voucher: Voucher): boolean => {
+  if (voucher.start_hour == null || voucher.end_hour == null) {
+    return true;
+  }
+
+  const currentHour = new Date().getHours(); // 0 - 23
+
+  return (
+    currentHour >= voucher.start_hour &&
+    currentHour < voucher.end_hour
+  );
+};
+
 
 /* ================= LOAD AVAILABLE VOUCHERS ================= */
 export const loadAvailableVouchers = async (
@@ -39,6 +56,7 @@ export const loadAvailableVouchers = async (
   return vouchers.filter((v) => {
     if (v.for_new_user && !isNew) return false;
     if (v.min_order_value && cartTotal < v.min_order_value) return false;
+    if (!isVoucherValidByTime(v)) return false;
     return true;
   });
 };
@@ -53,3 +71,4 @@ export const calculateDiscount = (
   }
   return voucher.discount_value;
 };
+

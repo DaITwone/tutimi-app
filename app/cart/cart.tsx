@@ -22,6 +22,8 @@ import {
 } from "../../services/voucherService";
 import { useThemeBackground } from "@/hooks/useThemeBackground";
 import { Swipeable } from "react-native-gesture-handler";
+import { getPublicImageUrl } from "@/lib/storage";
+import { router } from "expo-router";
 
 
 type CartItem = {
@@ -48,23 +50,14 @@ type CartItem = {
 
 export default function CartScreen() {
   const { userId } = useAuth();
-  const { refreshCart } = useCart();
-
   const [items, setItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [checkingOut, setCheckingOut] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<CartItem | null>(null);
   const [showVoucherModal, setShowVoucherModal] = useState(false);
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
-  const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
-  const [discountAmount, setDiscountAmount] = useState(0);
   const { bgUrl } = useThemeBackground();
-
-  const getPublicImageUrl = (path?: string | null) => {
-    if (!path) return null;
-    return supabase.storage.from("products").getPublicUrl(path).data.publicUrl;
-  };
+  const { refreshCart, selectedVoucher, setSelectedVoucher, discountAmount, setDiscountAmount } = useCart();
 
   const openVoucherModal = async () => {
     if (!userId) return;
@@ -73,12 +66,14 @@ export default function CartScreen() {
     setVouchers(list);
     setShowVoucherModal(true);
   };
+
   const applyVoucher = (voucher: Voucher) => {
     const discount = calculateDiscount(voucher, totalPrice);
     setSelectedVoucher(voucher);
     setDiscountAmount(discount);
     setShowVoucherModal(false);
   };
+
 
 
   /* ================= LOAD CART ================= */
@@ -191,74 +186,6 @@ export default function CartScreen() {
     </View>
   );
 
-
-  /* ================= CHECKOUT ================= */
-  const checkout = async () => {
-    if (!userId || items.length === 0) return;
-
-    setCheckingOut(true);
-
-    try {
-      const totalPrice = items.reduce(
-        (sum, i) => sum + i.total_price,
-        0
-      );
-
-      /* 1️⃣ create order */
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          user_id: userId,
-          total_price: totalPrice,
-          status: "pending",
-        })
-        .select()
-        .single();
-
-      if (orderError || !order) {
-        throw orderError;
-      }
-
-      /* 2️⃣ create order_items */
-      const orderItems = items.map((item) => ({
-        order_id: order.id,
-        product_id: item.products.id,
-        product_name: item.products.name,
-        product_image: item.products.image,
-        size: item.size,
-        quantity: item.quantity,
-        base_price: item.base_price,
-        topping_total: item.topping_total,
-        total_price: item.total_price,
-        toppings: item.toppings,
-      }));
-
-      const { error: itemsError } = await supabase
-        .from("order_items")
-        .insert(orderItems);
-
-      if (itemsError) {
-        throw itemsError;
-      }
-
-      /* 3️⃣ clear cart */
-      await supabase
-        .from("cart_items")
-        .delete()
-        .eq("user_id", userId);
-
-      refreshCart();
-      setItems([]);
-
-      Alert.alert("🎉 Thành công", "Đặt hàng thành công!");
-    } catch (err) {
-      console.error("❌ Checkout error:", err);
-      Alert.alert("Lỗi", "Không thể đặt hàng, vui lòng thử lại");
-    } finally {
-      setCheckingOut(false);
-    }
-  };
-
   const totalPrice = items.reduce(
     (sum, i) => sum + i.total_price,
     0
@@ -327,27 +254,22 @@ export default function CartScreen() {
                     paddingBottom: 220,
                   }}
                   renderItem={({ item }) => {
-                    const productImageUrl =
-                      item.products.image?.startsWith("file://") ||
-                        item.products.image?.startsWith("http")
-                        ? item.products.image
-                        : getPublicImageUrl(item.products.image) ||
-                        "https://via.placeholder.com/100";
-
+                    const productImageUrl = getPublicImageUrl(item.products.image);
 
                     return (
-                      <View className="mb-4 rounded-2xl overflow-hidden">
+                      <View className="mb-4 rounded-2xl overflow-hidden shadow-sm">
                         <Swipeable
                           renderRightActions={() => renderRightActions(item)}
                           overshootRight={false}
                         >
-                          <View className="flex-row bg-white/85 rounded-2xl p-3">
+                          <View className="flex-row bg-white/85 p-3">
                             {/* IMAGE */}
-                            <Image
-
-                              source={{ uri: productImageUrl }}
-                              className="w-28 h-32 rounded-xl"
-                            />
+                            {productImageUrl && (
+                              <Image
+                                source={{ uri: productImageUrl }}
+                                className="w-28 h-32 rounded-xl"
+                              />
+                            )}
 
                             {/* RIGHT CONTENT */}
                             <View className="flex-1 ml-3 relative pr-20 pb-8">
@@ -505,21 +427,14 @@ export default function CartScreen() {
             </View>
 
             <Pressable
-              onPress={checkout}
-              disabled={checkingOut}
+              onPress={() => router.push("/checkout/checkout")}
               className="rounded-2xl overflow-hidden"
             >
-              {checkingOut ? (
-                <View className="bg-gray-400 py-4 rounded-2xl">
-                  <ActivityIndicator color="white" />
-                </View>
-              ) : (
                 <View className="bg-[#1F4171] py-4 rounded-2xl items-center">
                   <Text className="text-white font-bold text-lg">
                     Đặt hàng ngay
                   </Text>
                 </View>
-              )}
             </Pressable>
 
             <View className="flex-row items-center justify-center mt-5">

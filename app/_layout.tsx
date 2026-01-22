@@ -5,7 +5,6 @@ import { CartProvider } from "../contexts/CartContext";
 import { FloatingCart } from "../components/FloatingCart";
 import { useCartSummary } from "../hooks/useCartSummary";
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
-import { useEffect, useState } from "react";
 import { NotificationProvider } from "@/contexts/NotificationsContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
@@ -14,24 +13,20 @@ function AppContent() {
   const pathname = usePathname();
 
   const { totalQty, totalPrice, refresh } = useCartSummary(userId);
-  const [showFloatingCart, setShowFloatingCart] = useState(false);
 
-  const isCartScreen = pathname.startsWith("/cart");
+  const FLOATING_CART_ROUTES = ["/", "/menu"];
 
-  useEffect(() => {
-    if (totalQty > 0 && !isCartScreen) {
-      setShowFloatingCart(false);
-      const timer = setTimeout(() => setShowFloatingCart(true), 3000);
-      return () => clearTimeout(timer);
-    } else {
-      setShowFloatingCart(false);
-    }
-  }, [totalQty, isCartScreen]);
+  const shouldShowFloatingCart =
+    totalQty > 0 &&
+    (
+      FLOATING_CART_ROUTES.includes(pathname) ||
+      pathname.startsWith("/product/")
+    );
 
   if (loading) return null;
 
   return (
-    <CartProvider value={{ refreshCart: refresh }}>
+    <CartProvider refreshCart={refresh}>
       <View className="flex-1">
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" />
@@ -40,7 +35,7 @@ function AppContent() {
           <Stack.Screen name="cart/cart" />
         </Stack>
 
-        {showFloatingCart && (
+        {shouldShowFloatingCart && (
           <FloatingCart
             totalQty={totalQty}
             totalPrice={totalPrice}
@@ -50,6 +45,7 @@ function AppContent() {
     </CartProvider>
   );
 }
+
 
 export default function RootLayout() {
   return (

@@ -152,7 +152,7 @@ export default function VerifyOtpScreen() {
                 <Image
                   source={{ uri: logoUrl }}
                   className="self-center"
-                  style={{ height: 220, width: 220 }}
+                  style={{ height: 180, width: 180 }}
                   resizeMode="cover"
                 />
               )}

@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../../../lib/supabaseClient";
 import { useThemeBackground } from "@/hooks/useThemeBackground";
+import { getPublicImageUrl } from "@/lib/storage";
 
 type User = {
   id: string;
@@ -63,6 +64,7 @@ export default function AccountScreen() {
     await supabase.auth.signOut();
   };
 
+  const avatarUrl = getPublicImageUrl(user?.avatar_url);
 
   return (
     <>
@@ -83,9 +85,9 @@ export default function AccountScreen() {
                   <View className="flex-row items-center">
                     {/* Avatar + online dot */}
                     <View className="relative">
-                      {user.avatar_url ? (
+                      {avatarUrl ? (
                         <Image
-                          source={{ uri: user.avatar_url }}
+                          source={{ uri: avatarUrl }}
                           className="w-16 h-16 rounded-full"
                         />
                       ) : (

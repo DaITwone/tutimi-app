@@ -199,7 +199,7 @@ export default function FavoritesScreen() {
                                     return (
                                         <View
                                             key={item.id}
-                                            className="bg-white/85 rounded-2xl p-4 mb-4"
+                                            className="bg-white/85 rounded-2xl p-4 mb-4 shadow-sm"
                                         >
                                             <View className="flex-row">
                                                 {/* IMAGE */}

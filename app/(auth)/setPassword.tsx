@@ -48,45 +48,38 @@ export default function SetPasswordScreen() {
   /* ================= SUBMIT ================= */
   const handleSetPassword = async () => {
     setError("");
-
-    if (!password || !confirmPassword) {
-      setError("Vui lòng nhập đầy đủ thông tin");
-      return;
-    }
-
-    if (!isPasswordStrong) {
-      setError("Mật khẩu chưa đáp ứng đủ yêu cầu bảo mật");
-      return;
-    }
-
     setLoading(true);
 
     try {
-      const { error: updateError } = await supabase.auth.updateUser({
-        password,
-      });
+      const { data: sessionData, error: sessionError } =
+        await supabase.auth.getSession();
 
-      if (updateError) {
-        console.error("Update password error:", updateError);
-        setError(updateError.message || "Không thể cập nhật mật khẩu");
+      if (!sessionData.session) {
+        setError("Phiên đăng nhập không hợp lệ. Vui lòng mở lại link từ email.");
         setLoading(false);
         return;
       }
 
-      // ✅ SUCCESS
+      const { error } = await supabase.auth.updateUser({ password });
+
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
+
       setSuccess(true);
       setLoading(false);
 
-      // ⏳ Chuyển trang sau 1.5s
       setTimeout(() => {
         router.replace("/(tabs)");
       }, 1500);
     } catch (err) {
-      console.error("Catch error:", err);
       setError("Có lỗi xảy ra, vui lòng thử lại.");
       setLoading(false);
     }
   };
+
 
   /* ================= UI ================= */
   return (

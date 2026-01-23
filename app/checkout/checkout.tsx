@@ -17,6 +17,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { getPublicImageUrl } from "@/lib/storage";
+import { TextInput } from "react-native-gesture-handler";
 
 /* ================= TYPES ================= */
 
@@ -56,9 +57,68 @@ type CartItem = {
 
 type PaymentMethod = "cod" | "momo" | "bank";
 
+type Bank = {
+  key: string;
+  name: string;
+  image: any;
+};
+
 /* ================= SCREEN ================= */
 
 export default function CheckoutScreen() {
+  const BANKS: Bank[] = [
+    {
+      key: "vietcombank",
+      name: "Vietcombank",
+      image: require("@/assets/images/vietcombank.png"),
+    },
+    {
+      key: "techcombank",
+      name: "Techcombank",
+      image: require("@/assets/images/techcombank.png"),
+    },
+    {
+      key: "mbbank",
+      name: "MB Bank",
+      image: require("@/assets/images/mb.png"),
+    },
+    {
+      key: "acb",
+      name: "ACB",
+      image: require("@/assets/images/acb.png"),
+    },
+    {
+      key: "vpbank",
+      name: "VPBank",
+      image: require("@/assets/images/vpbank.png"),
+    },
+    {
+      key: "vietinbank",
+      name: "VietinBank",
+      image: require("@/assets/images/vietinbank.png"),
+    },
+    {
+      key: "bidv",
+      name: "BIDV",
+      image: require("@/assets/images/bidv.png"),
+    },
+    {
+      key: "agribank",
+      name: "Agribank",
+      image: require("@/assets/images/agribank.png"),
+    },
+    {
+      key: "tpbank",
+      name: "TPBank",
+      image: require("@/assets/images/tpbank.png"),
+    },
+    {
+      key: "scb",
+      name: "Scb",
+      image: require("@/assets/images/scb.png"),
+    },
+  ];
+
   const { userId } = useAuth();
   const {
     refreshCart,
@@ -73,8 +133,9 @@ export default function CheckoutScreen() {
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [paymentMethod, setPaymentMethod] =
-    useState<PaymentMethod>("cod");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
+  const [showBankModal, setShowBankModal] = useState(false);
+  const [selectedBank, setSelectedBank] = useState<Bank | null>(null);
 
   /* ================= LOAD DATA ================= */
 
@@ -219,6 +280,13 @@ export default function CheckoutScreen() {
     }
   };
 
+  useEffect(() => {
+    if (paymentMethod !== "bank") {
+      setSelectedBank(null);
+    }
+  }, [paymentMethod]);
+
+
   /* ================= UI ================= */
 
   if (loading) {
@@ -263,29 +331,74 @@ export default function CheckoutScreen() {
           </Text>
 
           {[
-            { key: "cod", label: "Thanh toán khi nhận hàng" },
-            { key: "momo", label: "Ví MoMo" },
-            { key: "bank", label: "Chuyển khoản ngân hàng" },
-          ].map((m) => (
-            <Pressable
-              key={m.key}
-              onPress={() =>
-                setPaymentMethod(m.key as PaymentMethod)
-              }
-              className="flex-row items-center mb-3"
-            >
-              <Ionicons
-                name={
-                  paymentMethod === m.key
-                    ? "radio-button-on"
-                    : "radio-button-off"
-                }
-                size={20}
-                color="#1F4171"
-              />
-              <Text className="ml-2">{m.label}</Text>
-            </Pressable>
-          ))}
+            {
+              key: "cod",
+              label: "Thanh toán khi nhận hàng",
+              image: require("@/assets/images/money.png"),
+            },
+            {
+              key: "momo",
+              label: "Ví MoMo",
+              image: require("@/assets/images/momo.png"),
+            },
+            {
+              key: "bank",
+              label: "Chuyển khoản ngân hàng",
+              image: require("@/assets/images/card.png"),
+            },
+          ].map((m) => {
+            const active = paymentMethod === m.key;
+
+            return (
+              <Pressable
+                key={m.key}
+                onPress={() => {
+                  setPaymentMethod(m.key as PaymentMethod);
+
+                  if (m.key === "bank") {
+                    setShowBankModal(true);
+                  }
+                }}
+                className={`flex-row items-center mb-3 p-3 rounded-xl border ${active ? "border-[#1F4171] bg-blue-50" : "border-gray-200"
+                  }`}
+              >
+                {/* STICKER IMAGE */}
+                <View className="w-10 h-10 mr-3 items-center justify-center bg-white rounded-full">
+                  <Image
+                    source={m.image}
+                    className="w-6 h-6"
+                    resizeMode="contain"
+                  />
+                </View>
+
+                {/* LABEL */}
+                <View className="flex-1">
+                  <Text className="font-medium text-gray-600">{m.label}</Text>
+
+                  {m.key === "bank" && selectedBank && (
+                    <View className="flex-row items-center mt-1">
+                      <Image
+                        source={selectedBank.image}
+                        className="w-4 h-4 mr-1"
+                        resizeMode="contain"
+                      />
+                      <Text className="text-sm text-gray-500">
+                        {selectedBank.name}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* RADIO */}
+                <Ionicons
+                  name={active ? "radio-button-on" : "radio-button-off"}
+                  size={20}
+                  color="#1F4171"
+                />
+              </Pressable>
+            );
+          })}
+
         </View>
 
         {/* ===== ITEMS ===== */}
@@ -444,6 +557,49 @@ export default function CheckoutScreen() {
                 </Text>
               </Pressable>
             </View>
+          </View>
+        </View>
+      )}
+      {showBankModal && (
+        <View className="absolute inset-0 z-50">
+          {/* OVERLAY */}
+          <Pressable
+            onPress={() => setShowBankModal(false)}
+            className="absolute inset-0 bg-black/50"
+          />
+
+          {/* BOTTOM SHEET - ✅ THÊM rounded-t-3xl */}
+          <View className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6">
+            <View className="items-center mb-4">
+              <View className="w-12 h-1.5 bg-gray-300 rounded-full" />
+            </View>
+            <Text className="text-xl font-bold text-center text-[#1c4273] mb-4">
+              Chọn ngân hàng
+            </Text>
+
+            {BANKS.map((bank) => (
+              <Pressable
+                key={bank.key}
+                onPress={() => {
+                  setSelectedBank(bank);
+                  setShowBankModal(false);
+                }}
+                className="flex-row items-center py-3 border-b border-gray-200"
+              >
+                <Image
+                  source={bank.image}
+                  className="w-10 h-10 rounded-lg mr-3"
+                />
+                <Text className="text-sm font-medium flex-1 text-[#1b4f94]">
+                  {bank.name}
+                </Text>
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color="#9CA3AF"
+                />
+              </Pressable>
+            ))}
           </View>
         </View>
       )}

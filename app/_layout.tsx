@@ -7,12 +7,14 @@ import { useCartSummary } from "../hooks/useCartSummary";
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
 import { NotificationProvider } from "@/contexts/NotificationsContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useEffect, useState } from "react";
 
 function AppContent() {
   const { userId, loading } = useAuth();
   const pathname = usePathname();
 
   const { totalQty, totalPrice, refresh } = useCartSummary(userId);
+  const [showFloatingCart, setShowFloatingCart] = useState(false);
 
   const FLOATING_CART_ROUTES = ["/", "/menu"];
 
@@ -22,6 +24,30 @@ function AppContent() {
       FLOATING_CART_ROUTES.includes(pathname) ||
       pathname.startsWith("/product/")
     );
+
+  const shouldShowFloatingCartRaw =
+    totalQty > 0 &&
+    (
+      FLOATING_CART_ROUTES.includes(pathname) ||
+      pathname.startsWith("/product/")
+    );
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    if (shouldShowFloatingCartRaw) {
+      timer = setTimeout(() => {
+        setShowFloatingCart(true);
+      }, 3000);
+    } else {
+      setShowFloatingCart(false);
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [shouldShowFloatingCartRaw]);
+
 
   if (loading) return null;
 
@@ -35,7 +61,7 @@ function AppContent() {
           <Stack.Screen name="cart/cart" />
         </Stack>
 
-        {shouldShowFloatingCart && (
+        {showFloatingCart && (
           <FloatingCart
             totalQty={totalQty}
             totalPrice={totalPrice}

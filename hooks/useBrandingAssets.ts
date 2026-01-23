@@ -1,39 +1,51 @@
 import { useEffect, useState } from "react";
-import { Image } from "react-native";
+import { Image, ImageSourcePropType } from "react-native";
 import { supabase } from "@/lib/supabaseClient";
 
 /* ===============================
-   IMAGE HELPER
+   LOCAL FALLBACK ASSETS
+================================ */
+const LOCAL_BACKGROUND = require("@/assets/images/bg-local.png");
+const LOCAL_LOGO = require("@/assets/images/logo-local.png");
+
+/* ===============================
+   IMAGE HELPER (SUPABASE)
 ================================ */
 const getPublicImageUrl = (path?: string | null) => {
   if (!path) return null;
-  return supabase.storage.from("products").getPublicUrl(path).data.publicUrl;
+  return supabase.storage
+    .from("products")
+    .getPublicUrl(path).data.publicUrl;
 };
 
 /* ===============================
    BRANDING ASSETS HOOK
 ================================ */
 export function useBrandingAssets() {
-  const [background, setBackground] = useState<string | null>(null);
-  const [logo, setLogo] = useState<string | null>(null);
+  const [backgroundUri, setBackgroundUri] = useState<string | null>(null);
+  const [logoUri, setLogoUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
 
     const fetchBranding = async () => {
-      const { data, error } = await supabase
-        .from("app_brandings")
-        .select("background_uri, logo_uri")
-        .eq("is_active", true)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from("app_brandings")
+          .select("background_uri, logo_uri")
+          .eq("is_active", true)
+          .single();
 
-      if (!error && mounted && data) {
-        setBackground(data.background_uri ?? null);
-        setLogo(data.logo_uri ?? null);
+        if (!error && data && mounted) {
+          setBackgroundUri(data.background_uri ?? null);
+          setLogoUri(data.logo_uri ?? null);
+        }
+      } catch (e) {
+        // DB chết, ignore
+      } finally {
+        mounted && setLoading(false);
       }
-
-      mounted && setLoading(false);
     };
 
     fetchBranding();
@@ -43,23 +55,31 @@ export function useBrandingAssets() {
     };
   }, []);
 
-  const backgroundUrl = background ? getPublicImageUrl(background) : null;
-  const logoUrl = logo ? getPublicImageUrl(logo) : null;
+  /* ===============================
+     RESOLVE IMAGE SOURCE
+  ================================ */
+  const backgroundUrl: ImageSourcePropType =
+    backgroundUri
+      ? { uri: getPublicImageUrl(backgroundUri) }
+      : LOCAL_BACKGROUND;
+
+  const logoUrl: ImageSourcePropType =
+    logoUri
+      ? { uri: getPublicImageUrl(logoUri) }
+      : LOCAL_LOGO;
 
   /* ===============================
-     PREFETCH BRANDING ASSETS
+     PREFETCH REMOTE IMAGES ONLY
   ================================ */
   useEffect(() => {
-    if (backgroundUrl) {
-      Image.prefetch(backgroundUrl);
-    }
-  }, [backgroundUrl]);
+    const url = getPublicImageUrl(backgroundUri);
+    if (url) Image.prefetch(url);
+  }, [backgroundUri]);
 
   useEffect(() => {
-    if (logoUrl) {
-      Image.prefetch(logoUrl);
-    }
-  }, [logoUrl]);
+    const url = getPublicImageUrl(logoUri);
+    if (url) Image.prefetch(url);
+  }, [logoUri]);
 
   return {
     backgroundUrl,

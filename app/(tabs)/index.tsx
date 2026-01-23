@@ -142,7 +142,7 @@ export default function HomeScreen() {
         <>
             {backgroundUrl && (
                 <ImageBackground
-                    source={{ uri: backgroundUrl }}
+                    source={backgroundUrl}
                     resizeMode="cover"
                     className="flex-1"
                 >
@@ -151,7 +151,7 @@ export default function HomeScreen() {
                         <SafeAreaView edges={["top"]} className="px-5 py-6">
                             {logoUrl && (
                                 <Image
-                                    source={{ uri: logoUrl }}
+                                    source={logoUrl}
                                     className="self-center mb-3"
                                     style={{ height: 140, width: 210 }}
                                 />

@@ -140,7 +140,7 @@ export default function VerifyOtpScreen() {
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         {backgroundUrl && (
           <ImageBackground
-            source={{ uri: backgroundUrl }}
+            source={backgroundUrl}
             resizeMode="cover"
             className="flex-1"
           >
@@ -150,7 +150,7 @@ export default function VerifyOtpScreen() {
               {/* Logo */}
               {logoUrl && (
                 <Image
-                  source={{ uri: logoUrl }}
+                  source={logoUrl}
                   className="self-center"
                   style={{ height: 180, width: 180 }}
                   resizeMode="cover"

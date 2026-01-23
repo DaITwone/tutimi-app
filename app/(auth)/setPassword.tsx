@@ -93,7 +93,7 @@ export default function SetPasswordScreen() {
       >
         {backgroundUrl && (
           <ImageBackground
-            source={{ uri: backgroundUrl }}
+            source={backgroundUrl}
             resizeMode="cover"
             className="flex-1"
           >
@@ -102,7 +102,7 @@ export default function SetPasswordScreen() {
               <View className="items-center mb-8">
                 {logoUrl && (
                   <Image
-                    source={{ uri: logoUrl }}
+                    source={logoUrl}
                     className="w-56 h-44"
                     resizeMode="cover"
                   />

@@ -117,7 +117,7 @@ export default function LoginScreen() {
                 {/* ===== IMAGE BACKGROUND ===== */}
                 {backgroundUrl && (
                     <ImageBackground
-                        source={{ uri: backgroundUrl }}
+                        source={backgroundUrl}
                         resizeMode="cover"
                         className="flex-1"
                     >
@@ -127,7 +127,7 @@ export default function LoginScreen() {
                             <View className="items-center">
                                 {logoUrl && (
                                     <Image
-                                        source={{ uri: logoUrl }}
+                                        source={logoUrl}
                                         className="" style={{ height: 240, width: 240 }}
                                         resizeMode="contain"
                                     />

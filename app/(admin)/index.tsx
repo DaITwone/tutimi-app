@@ -166,7 +166,7 @@ export default function AdminDashboard() {
         >
           <Pressable onPress={openMenu}>
             <Image
-              source={require("../../assets/images/brand-logo-02.png")}
+              source={require("../../assets/images/logo-local.png")}
               className="self-center"
               style={{ height: 140, width: 210 }}
             />

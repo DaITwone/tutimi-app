@@ -80,7 +80,7 @@ export default function RegisterScreen() {
             >
                 {backgroundUrl && (
                     <ImageBackground
-                        source={{ uri: backgroundUrl }}
+                        source={backgroundUrl}
                         resizeMode="cover"
                         className="flex-1"
                     >
@@ -89,7 +89,7 @@ export default function RegisterScreen() {
                             {/* Logo */}
                             {logoUrl && (
                                 <Image
-                                    source={{ uri: logoUrl }}
+                                    source={logoUrl}
                                     className="self-center mb-4"
                                     style={{ height: 240, width: 240 }}
                                     resizeMode="contain"

@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -234,7 +234,7 @@ export default function CartScreen() {
           className="absolute inset-0"
         >
           {/* Overlay làm mờ */}
-          <View className="flex-1 bg-white/30">
+          <View className="flex-1 bg-white/80">
             <SafeAreaView className="flex-1">
               {loading ? (
                 <View className="flex-1 items-center justify-center">
@@ -257,7 +257,7 @@ export default function CartScreen() {
                     const productImageUrl = getPublicImageUrl(item.products.image);
 
                     return (
-                      <View className="mb-4 rounded-2xl overflow-hidden shadow-sm">
+                      <View className="mb-4 rounded-2xl bg-white overflow-hidden shadow-md border border-gray-300">
                         <Swipeable
                           renderRightActions={() => renderRightActions(item)}
                           overshootRight={false}
@@ -274,7 +274,7 @@ export default function CartScreen() {
                             {/* RIGHT CONTENT */}
                             <View className="flex-1 ml-3 relative pr-20 pb-8">
                               {/* NAME */}
-                              <Text className="font-bold text-[#1F4171]">
+                              <Text className="font-bold text-[#1b4f94]">
                                 {item.products.name}
                               </Text>
 
@@ -293,17 +293,19 @@ export default function CartScreen() {
                               )}
 
                               {/* SUGAR + ICE (TOP RIGHT) */}
-                              <View className="absolute top-0 right-0 items-end">
+                              <View className="absolute top-0 right-0 items-end gap-1">
                                 {item.sugar_level && (
-                                  <Text className="text-xs text-gray-500">
-                                    Đường: {item.sugar_level}
-                                  </Text>
+                                  <View className="flex-row items-center gap-1">
+                                    <MaterialCommunityIcons name="candy-outline" size={14} color="#6B7280" />
+                                    <Text className="text-xs text-gray-500">{item.sugar_level}</Text>
+                                  </View>
                                 )}
 
                                 {item.ice_level && (
-                                  <Text className="text-xs text-gray-500">
-                                    Đá: {item.ice_level}
-                                  </Text>
+                                  <View className="flex-row items-center gap-1">
+                                    <MaterialCommunityIcons name="snowflake" size={14} color="#6B7280" />
+                                    <Text className="text-xs text-gray-500">{item.ice_level}</Text>
+                                  </View>
                                 )}
                               </View>
 
@@ -430,11 +432,11 @@ export default function CartScreen() {
               onPress={() => router.push("/checkout/checkout")}
               className="rounded-2xl overflow-hidden"
             >
-                <View className="bg-[#1F4171] py-4 rounded-2xl items-center">
-                  <Text className="text-white font-bold text-lg">
-                    Đặt hàng ngay
-                  </Text>
-                </View>
+              <View className="bg-[#1F4171] py-4 rounded-2xl items-center">
+                <Text className="text-white font-bold text-lg">
+                  Đặt hàng ngay
+                </Text>
+              </View>
             </Pressable>
 
             <View className="flex-row items-center justify-center mt-5">

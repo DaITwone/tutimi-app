@@ -1,3 +1,4 @@
+//services/voucherService.ts
 import { supabase } from "../lib/supabaseClient";
 
 export type Voucher = {
@@ -15,14 +16,20 @@ export type Voucher = {
 
 /* ================= CHECK USER IS NEW ================= */
 export const isNewUser = async (userId: string): Promise<boolean> => {
-  const { count } = await supabase
+  const { count, error } = await supabase
     .from("orders")
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
-    .eq("status", "completed");
+    .neq("status", "cancelled"); // ✅ chỉ cần có đơn != cancelled là không phải new user
+
+  if (error) {
+    console.error("isNewUser error:", error.message);
+    return false; // hoặc true tuỳ bạn muốn fallback an toàn kiểu nào
+  }
 
   return (count ?? 0) === 0;
 };
+
 
 /* ================= CHECK TIME VOUCHER ================= */
 const isVoucherValidByTime = (voucher: Voucher): boolean => {

@@ -189,7 +189,7 @@ export default function MenuScreen() {
                 keyExtractor={(item) => item.id}
                 stickySectionHeadersEnabled={false}
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 20 }}
+                contentContainerStyle={{ paddingBottom: 120 }}
 
                 /* ===== SECTION HEADER ===== */
                 renderSectionHeader={({ section }) => (

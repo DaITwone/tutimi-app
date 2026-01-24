@@ -73,7 +73,7 @@ export default function AdminOrdersScreen() {
       .select(`
         *,
         order_items (*),
-        profile:profiles (
+        profile:profiles!orders_user_id_fkey (
           full_name,
           phone
         )
@@ -100,6 +100,15 @@ export default function AdminOrdersScreen() {
   useEffect(() => {
     loadOrders();
   }, [activeTab]);
+
+  useEffect(() => {
+    const debugRole = async () => {
+      const { data } = await supabase.auth.getSession();
+      console.log("JWT app_metadata:", data.session?.user?.app_metadata);
+    };
+
+    debugRole();
+  }, []);
 
   // Realtime subscription
   useEffect(() => {
@@ -508,14 +517,14 @@ export default function AdminOrdersScreen() {
                 key={reason}
                 onPress={() => setCancelReason(reason)}
                 className={`p-3 rounded-lg mb-2 border ${cancelReason === reason
-                    ? "border-red-500 bg-red-50"
-                    : "border-gray-200"
+                  ? "border-red-500 bg-red-50"
+                  : "border-gray-200"
                   }`}
               >
                 <Text
                   className={`${cancelReason === reason
-                      ? "text-red-700 font-semibold"
-                      : "text-gray-700"
+                    ? "text-red-700 font-semibold"
+                    : "text-gray-700"
                     }`}
                 >
                   {reason}

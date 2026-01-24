@@ -11,58 +11,32 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { supabase } from "../../../lib/supabaseClient";
 import { useThemeBackground } from "@/hooks/useThemeBackground";
 import { getPublicImageUrl } from "@/lib/storage";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabaseClient";
 
 type User = {
   id: string;
-  username: string;
+  username: string | null;
   full_name: string | null;
   avatar_url: string | null;
-  email: string | null;
-  role?: string; // 👈 thêm
+  email: string | null; // từ auth
+  role: string | null;
 };
 
-
 export default function AccountScreen() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
-  const [loading, setLoading] = useState(true);
   const { bgUrl } = useThemeBackground();
   const isAdmin = user?.role === "admin";
 
-  // Sử dụng useFocusEffect thay vì useEffect để reload mỗi khi màn hình được focus
-  useFocusEffect(
-    useCallback(() => {
-      fetchUser();
-    }, [])
-  );
-
-  async function fetchUser() {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session?.user) {
-      if (user !== null) setUser(null);
-      return;
-    }
-
-    const { data } = await supabase
-      .from("users")
-      .select("id, username, full_name, avatar_url, email, role")
-      .eq("id", session.user.id)
-      .single();
-
-    if (data) setUser(data);
-  }
 
   const logout = async () => {
     setShowMenu(false);
-    setUser(null); // clear UI ngay
     await supabase.auth.signOut();
   };
+
 
   const avatarUrl = getPublicImageUrl(user?.avatar_url);
 
@@ -163,7 +137,7 @@ export default function AccountScreen() {
                 <AccountItem
                   icon="receipt-outline"
                   label="Đơn hàng của tôi"
-                  onPress={() => router.push("/")}
+                  onPress={() => router.push("/(tabs)/account/orders")}
                 />
                 <AccountItem
                   icon="ticket-outline"

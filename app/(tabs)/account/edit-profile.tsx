@@ -25,15 +25,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLocalSearchParams } from "expo-router";
 import { getPublicImageUrl, uploadImageToStorage } from "@/lib/storage";
 
+
 type UserProfile = {
   id: string;
-  email: string | null;
+  email: string | null; // từ auth
   username: string | null;
   full_name: string | null;
   phone: string | null;
   avatar_url: string | null;
   address: string | null;
 };
+
 
 type ToastType = "success" | "error" | "info";
 
@@ -51,7 +53,7 @@ export default function EditProfileScreen() {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const { bgUrl } = useThemeBackground();
-  const { refreshUser } = useAuth();
+  const { user: authUser, userId, refreshUser } = useAuth();
   const [pendingAvatar, setPendingAvatar] = useState<string | null>(null);
   const { from } = useLocalSearchParams<{ from?: string }>();
 
@@ -84,29 +86,34 @@ export default function EditProfileScreen() {
   /* ================= LOAD USER ================= */
   useEffect(() => {
     loadProfile();
-  }, []);
+  }, [userId]);
 
   async function loadProfile() {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    if (!userId) return;
 
-    if (!session?.user) return;
-
-    const { data } = await supabase
-      .from("users")
-      .select("id, email, username, full_name, phone, avatar_url, address")
-      .eq("id", session.user.id)
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, username, full_name, phone, avatar_url, address")
+      .eq("id", userId)
       .single();
 
-    if (data) {
-      setUser(data);
-      setFullName(data.full_name || "");
-      setUsername(data.username || "");
-      setPhone(data.phone || "");
-      setAddress(data.address || "");
+    if (error) {
+      console.error("Load profile error:", error);
+      return;
     }
+
+    const profile: UserProfile = {
+      ...data,
+      email: authUser?.email ?? null, // ✅ lấy email từ AuthContext
+    };
+
+    setUser(profile);
+    setFullName(profile.full_name || "");
+    setUsername(profile.username || "");
+    setPhone(profile.phone || "");
+    setAddress(profile.address || "");
   }
+
 
   /* ================= AVATAR HANDLERS ================= */
   const handlePickImageFromDevice = async () => {
@@ -151,7 +158,7 @@ export default function EditProfileScreen() {
     setShowAvatarModal(false);
 
     const { error } = await supabase
-      .from("users")
+      .from("profiles")
       .update({ avatar_url: avatarUrl })
       .eq("id", user.id);
 
@@ -205,7 +212,7 @@ export default function EditProfileScreen() {
       }
 
       const { error } = await supabase
-        .from("users")
+        .from("profiles")
         .update(payload)
         .eq("id", user.id);
 

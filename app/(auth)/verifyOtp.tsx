@@ -92,6 +92,22 @@ export default function VerifyOtpScreen() {
         return;
       }
 
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user?.id) {
+        for (let i = 0; i < 3; i++) {
+          const { data } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("id", user.id)
+            .maybeSingle();
+
+          if (data) break;
+          await new Promise((r) => setTimeout(r, 400));
+        }
+      }
       router.replace({
         pathname: "/(auth)/setPassword",
         params: { email },
@@ -130,6 +146,7 @@ export default function VerifyOtpScreen() {
       setResendLoading(false);
     }
   };
+
 
   /* ================= UI ================= */
   return (

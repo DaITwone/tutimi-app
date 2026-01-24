@@ -314,6 +314,25 @@ export default function AdminDashboard() {
                 <Ionicons name="chevron-forward" size={22} color="#9ca3af" />
               </View>
             </Pressable>
+            <Pressable
+              onPress={() => router.push("/orders")}
+              className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm"
+            >
+              <View className="flex-row items-center">
+                <View className="h-12 w-12 rounded-xl bg-blue-900/10 items-center justify-center">
+                  <Ionicons name="color-palette-outline" size={24} color="#1b4f94" />
+                </View>
+                <View className="ml-4 flex-1">
+                  <Text className="text-[#1b4f94] font-bold text-lg">
+                    Quản lý đơn hàng
+                  </Text>
+                  <Text className="text-gray-500 text-sm mt-1">
+                    Đổi nền, logo, banding
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={22} color="#9ca3af" />
+              </View>
+            </Pressable>
           </View>
         </View>
       </ScrollView>

@@ -5,10 +5,11 @@ import { supabase } from "../lib/supabaseClient";
 
 export type UserProfile = {
   id: string;
-  username: string;
+  username: string | null;
   full_name: string | null;
   avatar_url: string | null;
-  email: string | null;
+  role: string | null;
+  email: string | null; // lấy từ auth.session
 };
 
 type AuthContextType = {
@@ -16,9 +17,8 @@ type AuthContextType = {
   userId: string | null;
   isLoggedIn: boolean;
   loading: boolean;
-  refreshUser: () => Promise<void>; // ✅ thêm
+  refreshUser: () => Promise<void>;
 };
-
 
 /* ================= CONTEXT ================= */
 
@@ -40,44 +40,50 @@ export const AuthProvider = ({
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  /* ===== FETCH PROFILE ===== */
+  const fetchUserProfile = async (userId: string, email: string | null) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, username, full_name, avatar_url, role")
+      .eq("id", userId)
+      .single();
+
+    if (error) {
+      console.error("Fetch profile error:", error);
+      setUser(null);
+      return;
+    }
+
+    setUser({
+      ...data,
+      email, // ✅ gắn email từ auth
+    });
+  };
+
+  /* ===== REFRESH USER ===== */
   const refreshUser = async () => {
     const {
       data: { session },
     } = await supabase.auth.getSession();
 
-    const userId = session?.user?.id ?? null;
+    const authUser = session?.user;
 
-    if (!userId) {
+    if (!authUser) {
       setUser(null);
       return;
     }
 
-    await fetchUserProfile(userId);
+    await fetchUserProfile(authUser.id, authUser.email ?? null);
   };
 
-  /* ===== FETCH USER PROFILE ===== */
-  const fetchUserProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("users")
-      .select("id, username, full_name, avatar_url, email")
-      .eq("id", userId)
-      .single();
-
-    if (!error) {
-      setUser(data);
-    } else {
-      setUser(null);
-    }
-  };
-
-  /* ===== INIT + LISTEN AUTH ===== */
+  /* ===== INIT + AUTH LISTENER ===== */
   useEffect(() => {
-    // 1️⃣ Lấy session ban đầu
+    // 1️⃣ Init session
     supabase.auth.getSession().then(async ({ data }) => {
-      const userId = data.session?.user?.id ?? null;
+      const authUser = data.session?.user;
 
-      if (userId) {
-        await fetchUserProfile(userId);
+      if (authUser) {
+        await fetchUserProfile(authUser.id, authUser.email ?? null);
       } else {
         setUser(null);
       }
@@ -85,14 +91,14 @@ export const AuthProvider = ({
       setLoading(false);
     });
 
-    // 2️⃣ Lắng nghe thay đổi đăng nhập / đăng xuất
+    // 2️⃣ Listen auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const userId = session?.user?.id ?? null;
+      const authUser = session?.user;
 
-      if (userId) {
-        await fetchUserProfile(userId);
+      if (authUser) {
+        await fetchUserProfile(authUser.id, authUser.email ?? null);
       } else {
         setUser(null);
       }
@@ -109,7 +115,8 @@ export const AuthProvider = ({
         user,
         userId: user?.id ?? null,
         isLoggedIn: !!user,
-        loading, refreshUser
+        loading,
+        refreshUser,
       }}
     >
       {children}

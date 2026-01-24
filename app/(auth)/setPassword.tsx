@@ -47,38 +47,55 @@ export default function SetPasswordScreen() {
 
   /* ================= SUBMIT ================= */
   const handleSetPassword = async () => {
+    if (!isPasswordStrong) {
+      setError("Mật khẩu chưa đạt yêu cầu.");
+      return;
+    }
+
     setError("");
     setLoading(true);
 
     try {
-      const { data: sessionData, error: sessionError } =
-        await supabase.auth.getSession();
+      const { data: userData, error: userError } = await supabase.auth.getUser();
 
-      if (!sessionData.session) {
-        setError("Phiên đăng nhập không hợp lệ. Vui lòng mở lại link từ email.");
-        setLoading(false);
+      if (userError || !userData.user) {
+        setError("Phiên đăng nhập không hợp lệ. Vui lòng quay lại bước OTP.");
         return;
       }
 
-      const { error } = await supabase.auth.updateUser({ password });
+      const { error: updateError } = await supabase.auth.updateUser({ password });
 
-      if (error) {
-        setError(error.message);
-        setLoading(false);
+      if (updateError) {
+        setError(updateError.message);
         return;
+      }
+
+      // ✅ đảm bảo trigger đã tạo profile
+      const userId = userData.user.id;
+
+      for (let i = 0; i < 3; i++) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", userId)
+          .maybeSingle();
+
+        if (data) break;
+        await new Promise((r) => setTimeout(r, 400));
       }
 
       setSuccess(true);
-      setLoading(false);
 
       setTimeout(() => {
         router.replace("/(tabs)");
-      }, 1500);
-    } catch (err) {
+      }, 1200);
+    } catch {
       setError("Có lỗi xảy ra, vui lòng thử lại.");
+    } finally {
       setLoading(false);
     }
   };
+
 
 
   /* ================= UI ================= */

@@ -146,33 +146,31 @@ export default function CheckoutScreen() {
 
     const [{ data: user }, { data: cart }] = await Promise.all([
       supabase
-        .from("users")
+        .from("profiles")
         .select("id, full_name, phone, address")
-        .eq("id", userId)
-        .single<UserProfile>(),
+        .single<UserProfile>(), // ✅ không cần eq(id, userId), RLS tự lọc
 
       supabase
         .from("cart_items")
         .select(`
+        id,
+        quantity,
+        size,
+        total_price,
+        base_price,
+        topping_total,
+        note,
+        sugar_level,
+        ice_level,
+        toppings,
+        products (
           id,
-          quantity,
-          size,
-          total_price,
-          base_price,
-          topping_total,
-          note,
-          sugar_level,
-          ice_level,
-          toppings,
-          products (
-            id,
-            name,
-            image
-          )
-        `)
-        .eq("user_id", userId)
+          name,
+          image
+        )
+      `)
         .order("created_at", { ascending: false })
-        .returns<CartItem[]>(), // ⭐ QUAN TRỌNG
+        .returns<CartItem[]>(),
     ]);
 
 

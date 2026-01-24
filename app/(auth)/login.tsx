@@ -51,54 +51,48 @@ export default function LoginScreen() {
         setLoading(true);
 
         try {
-            // 1️⃣ Login
-            const { error } = await supabase.auth.signInWithPassword({
+            // 1️⃣ Thực hiện đăng nhập
+            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
                 email,
                 password,
             });
 
-            if (error) {
-                setGeneralError("Sai thông tin đăng nhập");
+            if (authError) {
+                setGeneralError("Email hoặc mật khẩu không chính xác");
                 return;
             }
 
-            // 2️⃣ Lấy user hiện tại
-            const {
-                data: { user },
-            } = await supabase.auth.getUser();
+            const user = authData?.user;
+            if (!user) throw new Error("No user found");
 
-            if (!user) {
-                setGeneralError("Không lấy được thông tin người dùng");
-                return;
-            }
-
-            // 3️⃣ Lấy role từ table users
-            const { data: profile, error: roleError } = await supabase
-                .from("users")
+            // 2️⃣ Lấy Role từ bảng profiles (Nhờ RLS đã cài đặt, user chỉ lấy được data của chính mình)
+            const { data: profile, error: profileError } = await supabase
+                .from("profiles")
                 .select("role")
                 .eq("id", user.id)
                 .single();
 
-            if (roleError || !profile) {
-                setGeneralError("Không xác định được quyền người dùng");
+            if (profileError || !profile) {
+                // Trường hợp hy hữu: Auth có nhưng Profile chưa kịp tạo qua Trigger
+                console.error("Profile fetch error:", profileError);
+                setGeneralError("Lỗi hệ thống: Không tìm thấy hồ sơ người dùng");
                 return;
             }
 
-            // 4️⃣ Điều hướng
-            if (profile?.role === "admin") {
-                // 🔥 admin luôn vào admin
+            // 3️⃣ Điều hướng thông minh dựa trên Role
+            if (profile.role === "admin") {
                 router.replace("/(admin)");
-                return;
-            }
-
-            // 5️⃣ Giữ nguyên logic cũ cho user thường
-            if (redirectTo) {
-                router.replace(redirectTo as any);
             } else {
-                router.replace("/(tabs)");
+                // Nếu có tham số redirectTo (ví dụ từ thông báo), ưu tiên nó
+                if (redirectTo) {
+                    router.replace(redirectTo as any);
+                } else {
+                    router.replace("/(tabs)");
+                }
             }
-        } catch {
-            setGeneralError("Đã có lỗi xảy ra, vui lòng thử lại");
+        } catch (error) {
+            console.error("Login process error:", error);
+            setGeneralError("Đã có lỗi xảy ra, vui lòng thử lại sau");
         } finally {
             setLoading(false);
         }

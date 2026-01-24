@@ -41,11 +41,18 @@ export default function RegisterScreen() {
 
         try {
             // Gửi Magic Link
+            const username = email.split("@")[0]; // lấy trước @gmail.com
+
             const { data, error: otpError } = await supabase.auth.signInWithOtp({
-                email: email,
+                email,
                 options: {
-                    shouldCreateUser: true, // Tạo user mới nếu chưa tồn tại
-                }
+                    shouldCreateUser: true,
+                    data: {
+                        username,
+                        full_name: username, // hoặc để "" nếu bạn muốn
+                        avatar_url: null,
+                    },
+                },
             });
 
             if (otpError) {

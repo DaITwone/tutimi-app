@@ -69,9 +69,6 @@ export default function AdminOrdersScreen() {
   const [customReason, setCustomReason] = useState("");
   const [cancelLoading, setCancelLoading] = useState(false);
   const { bgUrl } = useThemeBackground();
-  const [confirmingId, setConfirmingId] = useState<string | null>(null);
-  const [completingId, setCompletingId] = useState<string | null>(null);
-
 
   const ADMIN_CANCEL_REASONS = [
     "Hết món",
@@ -162,8 +159,6 @@ export default function AdminOrdersScreen() {
 
   const handleConfirmOrder = async (orderId: string) => {
     try {
-      setConfirmingId(orderId);
-
       const { error } = await supabase
         .from("orders")
         .update({ status: "confirmed" })
@@ -171,21 +166,16 @@ export default function AdminOrdersScreen() {
 
       if (error) throw error;
 
-      await loadOrders(false);
+      loadOrders(false);
     } catch (err: any) {
       console.error("Confirm order error:", err?.message || err);
-    } finally {
-      setConfirmingId(null);
     }
   };
-
 
   /* ================= COMPLETE ORDER ================= */
 
   const handleCompleteOrder = async (orderId: string) => {
     try {
-      setCompletingId(orderId);
-
       const { error } = await supabase
         .from("orders")
         .update({ status: "completed" })
@@ -193,11 +183,9 @@ export default function AdminOrdersScreen() {
 
       if (error) throw error;
 
-      await loadOrders(false);
+      loadOrders(false);
     } catch (err: any) {
       console.error("Complete order error:", err?.message || err);
-    } finally {
-      setCompletingId(null);
     }
   };
 
@@ -292,8 +280,6 @@ export default function AdminOrdersScreen() {
   const renderOrderItem = ({ item: order }: { item: Order }) => {
     const firstItem = order.order_items[0];
     const remainingCount = order.order_items.length - 1;
-    const isConfirming = confirmingId === order.id;
-    const isCompleting = completingId === order.id;
 
     return (
       <View className="bg-white mb-3 rounded-2xl p-4 border border-gray-200">
@@ -392,23 +378,15 @@ export default function AdminOrdersScreen() {
             <>
               <Pressable
                 onPress={() => handleConfirmOrder(order.id)}
-                disabled={isConfirming}
-                className={`flex-1 py-3 rounded-lg mr-2 ${isConfirming ? "bg-[#1b4f94]/60" : "bg-[#1b4f94]"
-                  }`}
+                className="flex-1 bg-[#1b4f94] py-3 rounded-lg mr-2"
               >
-                {isConfirming ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text className="text-center font-semibold text-white">
-                    Xác nhận
-                  </Text>
-                )}
+                <Text className="text-center font-semibold text-white">
+                  Xác nhận
+                </Text>
               </Pressable>
-
               <Pressable
                 onPress={() => { openCancelModal(order); }}
-                disabled={isConfirming}
-                className={`bg-red-500 py-3 px-4 rounded-lg ${isConfirming ? "opacity-60" : ""}`}
+                className="bg-red-500 py-3 px-4 rounded-lg"
               >
                 <Text className="text-center font-semibold text-white">
                   Hủy đơn
@@ -421,17 +399,19 @@ export default function AdminOrdersScreen() {
             <>
               <Pressable
                 onPress={() => handleCompleteOrder(order.id)}
-                disabled={isCompleting}
-                className={`flex-1 py-3 rounded-lg mr-2 ${isCompleting ? "bg-green-500/60" : "bg-green-500"
-                  }`}
+                className="flex-1 bg-green-500 py-3 rounded-lg mr-2"
               >
-                {isCompleting ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text className="text-center font-semibold text-white">
-                    Hoàn tất
-                  </Text>
-                )}
+                <Text className="text-center font-semibold text-white">
+                  Hoàn tất
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  openCancelModal(order);
+                }}
+                className="bg-red-500 py-3 px-4 rounded-lg"
+              >
+                <Ionicons name="close" size={20} color="white" />
               </Pressable>
             </>
           )}
@@ -551,8 +531,8 @@ export default function AdminOrdersScreen() {
                         key={reason}
                         onPress={() => setSelectedReason(reason)}
                         className={`p-3 rounded-2xl border ${active
-                          ? "border-red-500 bg-red-50"
-                          : "border-gray-200 bg-white"
+                            ? "border-red-500 bg-red-50"
+                            : "border-gray-200 bg-white"
                           }`}
                       >
                         <View className="flex-row items-center justify-between">
@@ -607,10 +587,10 @@ export default function AdminOrdersScreen() {
                       (selectedReason === "Khác" && customReason.trim().length === 0)
                     }
                     className={`flex-1 py-3 rounded-2xl items-center ml-3 ${cancelLoading ||
-                      !selectedReason ||
-                      (selectedReason === "Khác" && customReason.trim().length === 0)
-                      ? "bg-gray-300"
-                      : "bg-red-500"
+                        !selectedReason ||
+                        (selectedReason === "Khác" && customReason.trim().length === 0)
+                        ? "bg-gray-300"
+                        : "bg-red-500"
                       }`}
                   >
                     {cancelLoading ? (

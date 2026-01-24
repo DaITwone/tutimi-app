@@ -306,14 +306,14 @@ export default function OrderDetailScreen() {
                 <Text className="text-lg font-bold text-[#1b4f94]">
                   {getStatusText(order.status)}
                 </Text>
-                <Text className="text-sm text-gray-600 mt-1">
+                <Text className="text-sm text-gray-500">
                   {new Date(order.created_at).toLocaleString("vi-VN")}
                 </Text>
               </View>
 
               {/* Icon right */}
               {order.status === "confirmed" && (
-                <Ionicons name="bicycle" size={30} color="#2563eb" />
+                <Ionicons name="car" size={30} color="#2563eb" />
               )}
               {order.status === "completed" && (
                 <Ionicons name="checkmark-circle" size={30} color="#16a34a" />
@@ -388,7 +388,7 @@ export default function OrderDetailScreen() {
               </>
             )}
           </View>
-          
+
           {/* RECEIVER INFO */}
           <View className="bg-white p-4 rounded-2xl mb-4">
             <Text className="font-bold text-lg text-[#1c4273] mb-3">
@@ -469,22 +469,38 @@ export default function OrderDetailScreen() {
                       </Text>
                     </View>
 
-                    {/* RIGHT OPTIONS */}
-                    {(item.sugar_level || item.ice_level) && (
-                      <View className="items-end ml-2">
-                        {item.sugar_level && (
-                          <View className="flex-row items-center gap-1">
-                            <MaterialCommunityIcons name="candy-outline" size={14} color="#6B7280" />
-                            <Text className="text-xs text-gray-500">{item.sugar_level}</Text>
-                          </View>
-                        )}
-                        {item.ice_level && (
-                          <Text className="text-xs text-gray-500 mt-1">
-                            🧊 {item.ice_level}
-                          </Text>
-                        )}
-                      </View>
-                    )}
+                    {/* RIGHT OPTIONS (hide if default 100%) */}
+                    {(() => {
+                      const isDefaultSugar = item.sugar_level === "100%";
+                      const isDefaultIce = item.ice_level === "100%";
+
+                      const shouldShowLevel =
+                        (item.sugar_level && !isDefaultSugar) || (item.ice_level && !isDefaultIce);
+
+                      if (!shouldShowLevel) return null;
+
+                      return (
+                        <View className="items-end ml-2">
+                          {item.sugar_level && item.sugar_level !== "100%" && (
+                            <View className="flex-row items-center gap-1">
+                              <MaterialCommunityIcons
+                                name="candy-outline"
+                                size={14}
+                                color="#6B7280"
+                              />
+                              <Text className="text-xs text-gray-500">{item.sugar_level}</Text>
+                            </View>
+                          )}
+
+                          {item.ice_level && item.ice_level !== "100%" && (
+                            <View className="flex-row items-center gap-1 mt-1">
+                              <MaterialCommunityIcons name="snowflake" size={14} color="#6B7280" />
+                              <Text className="text-xs text-gray-500">{item.ice_level}</Text>
+                            </View>
+                          )}
+                        </View>
+                      );
+                    })()}
                   </View>
                 </View>
               </View>
@@ -586,8 +602,8 @@ export default function OrderDetailScreen() {
                         key={reason}
                         onPress={() => setSelectedReason(reason)}
                         className={`p-3 rounded-2xl border ${active
-                            ? "border-[#1F4171] bg-blue-50"
-                            : "border-gray-200 bg-white"
+                          ? "border-[#1F4171] bg-blue-50"
+                          : "border-gray-200 bg-white"
                           }`}
                       >
                         <View className="flex-row items-center justify-between">
@@ -651,10 +667,10 @@ export default function OrderDetailScreen() {
                       (selectedReason === "Khác" && customReason.trim().length === 0)
                     }
                     className={`flex-1 py-3 rounded-2xl items-center ml-3 ${cancelLoading ||
-                        !selectedReason ||
-                        (selectedReason === "Khác" && customReason.trim().length === 0)
-                        ? "bg-gray-300"
-                        : "bg-red-500"
+                      !selectedReason ||
+                      (selectedReason === "Khác" && customReason.trim().length === 0)
+                      ? "bg-gray-300"
+                      : "bg-red-500"
                       }`}
                   >
                     {cancelLoading ? (

@@ -221,7 +221,7 @@ export default function UserOrdersScreen() {
       case "pending":
         return "time-outline";
       case "confirmed":
-        return "bicycle-outline";
+        return "car";
       case "completed":
         return "checkmark-circle-outline";
       case "cancelled":

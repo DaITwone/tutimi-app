@@ -7,7 +7,9 @@ import {
   Alert,
   Image,
   ImageBackground,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -81,7 +83,6 @@ export default function AdminOrderDetailScreen() {
 
   const { bgUrl } = useThemeBackground();
 
-
   /* ================= LOAD ORDER ================= */
 
   const loadOrder = async () => {
@@ -134,85 +135,64 @@ export default function AdminOrderDetailScreen() {
 
   /* ================= ACTIONS ================= */
 
-  const handleConfirmOrder = () => {
-    if (!order) return;
+  type ActionType = "confirm" | "complete" | null;
 
-    Alert.alert("Xác nhận đơn hàng", "Bắt đầu giao hàng cho đơn này?", [
-      { text: "Hủy", style: "cancel" },
-      {
-        text: "Xác nhận",
-        onPress: async () => {
-          const { error } = await supabase
-            .from("orders")
-            .update({ status: "confirmed" })
-            .eq("id", order.id);
+  const [actionModal, setActionModal] = useState<{
+    visible: boolean;
+    type: ActionType;
+  }>({ visible: false, type: null });
 
-          if (error) {
-            Alert.alert("Lỗi", "Không thể xác nhận đơn hàng");
-          } else {
-            Alert.alert("Thành công", "Đã xác nhận đơn hàng");
-            loadOrder();
-          }
-        },
-      },
-    ]);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const openActionModal = (type: ActionType) => {
+    setActionModal({ visible: true, type });
   };
 
-  const handleCompleteOrder = () => {
-    if (!order) return;
+  const handleSubmitAction = async () => {
+    if (!order || !actionModal.type) return;
 
-    Alert.alert("Hoàn tất đơn hàng", "Đánh dấu đơn này đã giao thành công?", [
-      { text: "Hủy", style: "cancel" },
-      {
-        text: "Hoàn tất",
-        onPress: async () => {
-          const { error } = await supabase
-            .from("orders")
-            .update({ status: "completed" })
-            .eq("id", order.id);
+    setActionLoading(true);
 
-          if (error) {
-            Alert.alert("Lỗi", "Không thể hoàn tất đơn hàng");
-          } else {
-            Alert.alert("Thành công", "Đã hoàn tất đơn hàng");
-            loadOrder();
-          }
-        },
-      },
-    ]);
-  };
+    const nextStatus =
+      actionModal.type === "confirm" ? "confirmed" : "completed";
 
-  const handleCancelOrder = () => {
-    if (!order || !cancelReason.trim()) {
-      Alert.alert("Lỗi", "Vui lòng nhập lý do hủy đơn");
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: nextStatus })
+      .eq("id", order.id);
+
+    setActionLoading(false);
+
+    if (error) {
+      // nếu muốn: show toast / message text trong modal
       return;
     }
 
-    Alert.alert("Xác nhận hủy đơn", `Hủy đơn với lý do: "${cancelReason}"?`, [
-      { text: "Không", style: "cancel" },
-      {
-        text: "Hủy đơn",
-        style: "destructive",
-        onPress: async () => {
-          const { error } = await supabase
-            .from("orders")
-            .update({
-              status: "cancelled",
-              cancel_reason: cancelReason,
-            })
-            .eq("id", order.id);
+    setActionModal({ visible: false, type: null });
+    loadOrder();
+  };
 
-          if (error) {
-            Alert.alert("Lỗi", "Không thể hủy đơn hàng");
-          } else {
-            Alert.alert("Thành công", "Đã hủy đơn hàng");
-            setShowCancelModal(false);
-            setCancelReason("");
-            loadOrder();
-          }
-        },
-      },
-    ]);
+  const handleCancelOrder = async () => {
+    if (!order) return;
+
+    // ✅ rule: chỉ pending mới được cancel
+    if (order.status !== "pending") return;
+
+    if (!cancelReason.trim()) return;
+
+    const { error } = await supabase
+      .from("orders")
+      .update({
+        status: "cancelled",
+        cancel_reason: cancelReason,
+      })
+      .eq("id", order.id);
+
+    if (error) return;
+
+    setShowCancelModal(false);
+    setCancelReason("");
+    loadOrder();
   };
 
   /* ================= UI HELPERS ================= */
@@ -557,13 +537,9 @@ export default function AdminOrderDetailScreen() {
               </View>
             </View>
           </View>
-        </ScrollView>
-
-        {/* FOOTER ACTIONS */}
-        {(order.status === "pending" || order.status === "confirmed") && (
-          <View className="absolute bottom-0 left-0 right-0 bg-white p-4 border-t border-gray-200">
+          {/* FOOTER ACTIONS */}
+          {(order.status === "pending" || order.status === "confirmed") && (
             <View className="flex-row">
-
               {/* ✅ CHỈ HIỂN THỊ NÚT HỦY KHI PENDING */}
               {order.status === "pending" && (
                 <Pressable
@@ -576,8 +552,8 @@ export default function AdminOrderDetailScreen() {
 
               {order.status === "pending" && (
                 <Pressable
-                  onPress={handleConfirmOrder}
-                  className={`flex-1 bg-blue-500 py-4 rounded-2xl items-center ${order.status === "pending" ? "ml-2" : ""}`}
+                  onPress={() => openActionModal("confirm")}
+                  className="flex-1 bg-blue-500 py-4 rounded-2xl items-center ml-2"
                 >
                   <Text className="text-white font-bold text-lg">Xác nhận</Text>
                 </Pressable>
@@ -585,101 +561,212 @@ export default function AdminOrderDetailScreen() {
 
               {order.status === "confirmed" && (
                 <Pressable
-                  onPress={handleCompleteOrder}
-                  className="self-center bg-green-500 py-4 px-10 rounded-2xl items-center"
+                  onPress={() => openActionModal("complete")}
+                  className="flex-1 bg-green-500 py-4 rounded-2xl items-center"
                 >
                   <Text className="text-white font-bold text-lg">Hoàn tất</Text>
                 </Pressable>
               )}
             </View>
-          </View>
-        )}
+          )}
+        </ScrollView>
 
-        {/* CANCEL MODAL */}
         <Modal
-          visible={showCancelModal}
+          visible={actionModal.visible}
           transparent
           animationType="fade"
-          onRequestClose={() => setShowCancelModal(false)}
+          onRequestClose={() => setActionModal({ visible: false, type: null })}
         >
           <Pressable
             className="flex-1 bg-black/50 justify-center items-center"
-            onPress={() => setShowCancelModal(false)}
+            onPress={() => setActionModal({ visible: false, type: null })}
           >
             <Pressable
               className="bg-white rounded-3xl p-6 w-[90%] max-w-md"
               onPress={(e) => e.stopPropagation()}
             >
               <View className="items-center mb-4">
-                <View className="w-16 h-16 bg-red-100 rounded-full items-center justify-center">
-                  <Ionicons name="close-circle" size={32} color="#dc2626" />
+                <View
+                  className={`w-16 h-16 rounded-full items-center justify-center ${actionModal.type === "confirm" ? "bg-blue-100" : "bg-green-100"
+                    }`}
+                >
+                  <Ionicons
+                    name={actionModal.type === "confirm" ? "car-outline" : "checkmark-circle"}
+                    size={32}
+                    color={actionModal.type === "confirm" ? "#2563eb" : "#16a34a"}
+                  />
                 </View>
+
                 <Text className="text-xl font-bold text-gray-800 mt-3">
-                  Hủy đơn hàng
+                  {actionModal.type === "confirm"
+                    ? "Xác nhận giao hàng"
+                    : "Hoàn tất đơn hàng"}
+                </Text>
+
+                <Text className="text-gray-500 text-center mt-2">
+                  {actionModal.type === "confirm"
+                    ? "Bắt đầu giao hàng cho đơn này?"
+                    : "Đánh dấu đơn này đã giao thành công?"}
                 </Text>
               </View>
 
-              <Text className="text-gray-600 mb-4">Chọn lý do hủy đơn hàng:</Text>
-
-              {[
-                "Hết món",
-                "Hết topping",
-                "Chưa tắt món trên hệ thống",
-                "Hết khuyến mãi",
-                "Khách hàng yêu cầu",
-                "Lý do khác",
-              ].map((reason) => (
-                <Pressable
-                  key={reason}
-                  onPress={() => setCancelReason(reason)}
-                  className={`p-3 rounded-lg mb-2 border ${cancelReason === reason
-                    ? "border-red-500 bg-red-50"
-                    : "border-gray-200"
-                    }`}
-                >
-                  <Text
-                    className={`${cancelReason === reason
-                      ? "text-red-700 font-semibold"
-                      : "text-gray-700"
-                      }`}
-                  >
-                    {reason}
-                  </Text>
-                </Pressable>
-              ))}
-
-              {cancelReason === "Lý do khác" && (
-                <TextInput
-                  placeholder="Nhập lý do..."
-                  value={cancelReason}
-                  onChangeText={setCancelReason}
-                  className="border border-gray-300 rounded-lg p-3 mt-2"
-                  multiline
-                />
-              )}
-
               <View className="flex-row mt-4">
                 <Pressable
-                  onPress={() => {
-                    setShowCancelModal(false);
-                    setCancelReason("");
-                  }}
+                  disabled={actionLoading}
+                  onPress={() => setActionModal({ visible: false, type: null })}
                   className="flex-1 bg-gray-200 py-3 rounded-lg mr-2"
                 >
-                  <Text className="text-center font-semibold text-gray-700">
-                    Đóng
-                  </Text>
+                  <Text className="text-center font-semibold text-gray-700">Đóng</Text>
                 </Pressable>
+
                 <Pressable
-                  onPress={handleCancelOrder}
-                  className="flex-1 bg-red-500 py-3 rounded-lg ml-2"
+                  disabled={actionLoading}
+                  onPress={handleSubmitAction}
+                  className={`flex-1 py-3 rounded-lg ml-2 items-center justify-center ${actionModal.type === "confirm" ? "bg-blue-500" : "bg-green-500"
+                    }`}
                 >
-                  <Text className="text-center font-semibold text-white">
-                    Xác nhận hủy
-                  </Text>
+                  {actionLoading ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <Text className="text-center font-semibold text-white">
+                      Xác nhận
+                    </Text>
+                  )}
                 </Pressable>
               </View>
             </Pressable>
+          </Pressable>
+        </Modal>
+
+        {/* CANCEL MODAL */}
+        {/* CANCEL MODAL (Design giống ảnh mẫu) */}
+        <Modal
+          visible={showCancelModal}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowCancelModal(false)}
+        >
+          {/* Overlay */}
+          <Pressable
+            className="flex-1 bg-black/40 justify-end"
+            onPress={() => setShowCancelModal(false)}
+          >
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+            >
+              {/* Sheet */}
+              <Pressable
+                onPress={(e) => e.stopPropagation()}
+                className="bg-white rounded-t-3xl px-5 pt-4 pb-6"
+              >
+                {/* Handle */}
+                <View className="items-center mb-3">
+                  <View className="w-16 h-1.5 rounded-full bg-gray-300" />
+                </View>
+
+                {/* Title */}
+                <Text className="text-xl font-extrabold text-[#1c4273]">
+                  Hủy đơn hàng
+                </Text>
+
+                {/* Order code */}
+                {order && (
+                  <Text className="text-sm text-gray-400 italic mb-4">
+                    Mã đơn: #{order.id.slice(0, 8)}
+                  </Text>
+                )}
+
+                {/* Reasons */}
+                <View className="gap-3">
+                  {[
+                    "Hết món",
+                    "Quá tải đơn",
+                    "Không liên hệ được khách",
+                    "Sai thông tin giao hàng",
+                    "Ngoài khu vực phục vụ",
+                    "Khác",
+                  ].map((reason) => {
+                    const active = cancelReason === reason;
+
+                    return (
+                      <Pressable
+                        key={reason}
+                        onPress={() => setCancelReason(reason)}
+                        className={`px-5 py-2 rounded-2xl border ${active ? "border-red-400 bg-red-50" : "border-gray-200 bg-white"
+                          }`}
+                      >
+                        <View className="flex-row items-center justify-between">
+                          <Text
+                            className={`font-bold ${active ? "text-red-600" : "text-gray-400"
+                              }`}
+                          >
+                            {reason}
+                          </Text>
+
+                          {active ? (
+                            <Ionicons
+                              name="radio-button-on"
+                              size={24}
+                              color="#ef4444"
+                            />
+                          ) : (
+                            <Ionicons
+                              name="radio-button-off"
+                              size={24}
+                              color="#9CA3AF"
+                            />
+                          )}
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
+                {/* Custom reason input */}
+                {cancelReason === "Khác" && (
+                  <View className="mt-4">
+                    <Text className="text-sm text-gray-600 mb-2 font-semibold">
+                      Nhập lý do
+                    </Text>
+                    <TextInput
+                      value={cancelReason}
+                      onChangeText={setCancelReason}
+                      placeholder="Nhập lý do cụ thể..."
+                      className="border border-gray-200 rounded-2xl px-4 py-3 text-gray-700"
+                      multiline
+                      numberOfLines={3}
+                      textAlignVertical="top"
+                    />
+                  </View>
+                )}
+
+                {/* Footer actions */}
+                <View className="flex-row mt-6">
+                  <Pressable
+                    onPress={() => {
+                      setShowCancelModal(false);
+                      setCancelReason("");
+                    }}
+                    className="flex-1 border border-gray-200 py-4 rounded-2xl items-center"
+                  >
+                    <Text className="font-extrabold text-gray-600">
+                      Đóng
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={handleCancelOrder}
+                    disabled={!cancelReason.trim()}
+                    className={`flex-1 py-4 rounded-2xl items-center ml-4 ${!cancelReason.trim() ? "bg-gray-300" : "bg-red-500"
+                      }`}
+                  >
+                    <Text className="text-white font-extrabold">
+                      Xác nhận hủy
+                    </Text>
+                  </Pressable>
+                </View>
+              </Pressable>
+            </KeyboardAvoidingView>
           </Pressable>
         </Modal>
       </SafeAreaView>

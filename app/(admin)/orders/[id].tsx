@@ -1,24 +1,24 @@
 // app/(admin)/orders/[id].tsx
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useLocalSearchParams, router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Image,
+  ImageBackground,
   Modal,
   Pressable,
   ScrollView,
   Text,
   TextInput,
   View,
-  ImageBackground,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { supabase } from "@/lib/supabaseClient";
-import { getPublicImageUrl } from "@/lib/storage";
 import { useThemeBackground } from "@/hooks/useThemeBackground";
+import { getPublicImageUrl } from "@/lib/storage";
+import { supabase } from "@/lib/supabaseClient";
 
 /* ================= TYPES ================= */
 
@@ -477,7 +477,7 @@ export default function AdminOrderDetailScreen() {
                         {item.total_price.toLocaleString("vi-VN")}đ
                       </Text>
                     </View>
-                    
+
                     {/* RIGHT OPTIONS (hide if default 100%) */}
                     {(() => {
                       const isDefaultSugar = item.sugar_level === "100%";
@@ -563,17 +563,21 @@ export default function AdminOrderDetailScreen() {
         {(order.status === "pending" || order.status === "confirmed") && (
           <View className="absolute bottom-0 left-0 right-0 bg-white p-4 border-t border-gray-200">
             <View className="flex-row">
-              <Pressable
-                onPress={() => setShowCancelModal(true)}
-                className="flex-1 bg-red-500 py-4 rounded-2xl items-center mr-2"
-              >
-                <Text className="text-white font-bold text-lg">Hủy đơn</Text>
-              </Pressable>
+
+              {/* ✅ CHỈ HIỂN THỊ NÚT HỦY KHI PENDING */}
+              {order.status === "pending" && (
+                <Pressable
+                  onPress={() => setShowCancelModal(true)}
+                  className="flex-1 bg-red-500 py-4 rounded-2xl items-center mr-2"
+                >
+                  <Text className="text-white font-bold text-lg">Hủy đơn</Text>
+                </Pressable>
+              )}
 
               {order.status === "pending" && (
                 <Pressable
                   onPress={handleConfirmOrder}
-                  className="flex-1 bg-blue-500 py-4 rounded-2xl items-center ml-2"
+                  className={`flex-1 bg-blue-500 py-4 rounded-2xl items-center ${order.status === "pending" ? "ml-2" : ""}`}
                 >
                   <Text className="text-white font-bold text-lg">Xác nhận</Text>
                 </Pressable>
@@ -582,7 +586,7 @@ export default function AdminOrderDetailScreen() {
               {order.status === "confirmed" && (
                 <Pressable
                   onPress={handleCompleteOrder}
-                  className="flex-1 bg-green-500 py-4 rounded-2xl items-center ml-2"
+                  className="self-center bg-green-500 py-4 px-10 rounded-2xl items-center"
                 >
                   <Text className="text-white font-bold text-lg">Hoàn tất</Text>
                 </Pressable>

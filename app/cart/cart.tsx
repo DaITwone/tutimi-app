@@ -1,5 +1,5 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -58,6 +58,8 @@ export default function CartScreen() {
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const { bgUrl } = useThemeBackground();
   const { refreshCart, selectedVoucher, setSelectedVoucher, discountAmount, setDiscountAmount } = useCart();
+  const swipeRefs = useRef<Record<string, Swipeable | null>>({});
+  const [openedId, setOpenedId] = useState<string | null>(null);
 
   const openVoucherModal = async () => {
     if (!userId) return;
@@ -178,7 +180,7 @@ export default function CartScreen() {
           setSelectedItem(item);
           setShowDeleteModal(true);
         }}
-        className="bg-red-600 h-full w-20 items-center justify-center"
+        className="bg-red-600 h-full w-16 items-center justify-center"
       >
         <Ionicons name="trash-outline" size={24} color="#fff" />
         <Text className="text-white text-xs mt-1">Xoá</Text>
@@ -262,7 +264,7 @@ export default function CartScreen() {
                           renderRightActions={() => renderRightActions(item)}
                           overshootRight={false}
                         >
-                          <View className="flex-row bg-white/85 p-3">
+                          <View className="flex-row bg-white p-3">
                             {/* IMAGE */}
                             {productImageUrl && (
                               <Image

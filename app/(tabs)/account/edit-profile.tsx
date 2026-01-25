@@ -256,7 +256,7 @@ export default function EditProfileScreen() {
           <KeyboardAvoidingView
             className="flex-1"
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0}
           >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
 
@@ -279,6 +279,7 @@ export default function EditProfileScreen() {
                   className="flex-1 px-5"
                   showsVerticalScrollIndicator={false}
                   keyboardShouldPersistTaps="handled"
+                  automaticallyAdjustKeyboardInsets={true} // iOS
                   contentContainerStyle={{ paddingBottom: 40 }}
                 >
                   {/* ===== AVATAR SECTION ===== */}
@@ -378,9 +379,6 @@ export default function EditProfileScreen() {
                           value={address}
                           onChangeText={setAddress}
                           placeholder="Nhập địa chỉ nhận hàng"
-                          multiline
-                          numberOfLines={3}
-                          textAlignVertical="top"
                           className="flex-1 py-3 px-3 text-gray-900"
                           placeholderTextColor="#9CA3AF"
                         />

@@ -122,22 +122,28 @@ export default function CheckoutScreen() {
   ];
 
   const { userId } = useAuth();
+
   const {
-    refreshCart,
-    discountAmount,
-    selectedVoucher,
-    setDiscountAmount,
-    setSelectedVoucher,
-  } = useCart();
+  refreshCart,
+  discountAmount,
+  selectedVoucher,
+  setDiscountAmount,
+  setSelectedVoucher,
+
+  // ✅ NEW
+  paymentMethod,
+  setPaymentMethod,
+  selectedBank,
+  setSelectedBank,
+} = useCart();
+
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [items, setItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
   const [showBankModal, setShowBankModal] = useState(false);
-  const [selectedBank, setSelectedBank] = useState<Bank | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const { bgUrl } = useThemeBackground();

@@ -71,25 +71,27 @@ export default function AdminDashboard() {
   =============================== */
   const fetchStats = async () => {
     const [
-      { data: userData },
+      { count: users, error: userErr },
       { count: products },
       { count: news },
     ] = await Promise.all([
       supabase
-        .from("admin_user_count")
-        .select("total")
-        .single(),
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .neq("role", "admin"), // nếu muốn loại admin
 
       supabase
         .from("products")
-        .select("*", { count: "exact", head: true }),
+        .select("id", { count: "exact", head: true }),
 
       supabase
         .from("news")
-        .select("*", { count: "exact", head: true }),
+        .select("id", { count: "exact", head: true }),
     ]);
 
-    const u = userData?.total ?? 0;
+    if (userErr) console.log("count users error:", userErr);
+
+    const u = users ?? 0;
     const p = products ?? 0;
     const n = news ?? 0;
 
@@ -104,21 +106,18 @@ export default function AdminDashboard() {
         easing: Easing.out(Easing.cubic),
         useNativeDriver: false,
       }),
-
       Animated.timing(productAnim, {
         toValue: p,
         duration: 1900,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: false,
       }),
-
       Animated.timing(newsAnim, {
         toValue: n,
         duration: 2200,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: false,
       }),
-
       Animated.spring(scaleAnim, {
         toValue: 1,
         friction: 6,
@@ -126,6 +125,7 @@ export default function AdminDashboard() {
       }),
     ]).start();
   };
+
 
 
   /* ===============================
@@ -296,6 +296,26 @@ export default function AdminDashboard() {
             </Pressable>
 
             <Pressable
+              onPress={() => router.push("/orders")}
+              className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm"
+            >
+              <View className="flex-row items-center">
+                <View className="h-12 w-12 rounded-xl bg-orange-500/10 items-center justify-center">
+                  <Ionicons name="cart-outline" size={24} color="#c2410c" />
+                </View>
+                <View className="ml-4 flex-1">
+                  <Text className="text-orange-700/80 font-bold text-lg">
+                    Quản Lý Đơn Hàng
+                  </Text>
+                  <Text className="text-gray-500 text-sm mt-1">
+                    Xem, xác nhận, hoàn tất đơn
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={22} color="#9ca3af" />
+              </View>
+            </Pressable>
+
+            <Pressable
               onPress={() => router.push("/theme")}
               className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm"
             >
@@ -306,25 +326,6 @@ export default function AdminDashboard() {
                 <View className="ml-4 flex-1">
                   <Text className="text-[#1b4f94] font-bold text-lg">
                     Thiết Lập Giao Diện
-                  </Text>
-                  <Text className="text-gray-500 text-sm mt-1">
-                    Đổi nền, logo, banding
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={22} color="#9ca3af" />
-              </View>
-            </Pressable>
-            <Pressable
-              onPress={() => router.push("/orders")}
-              className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm"
-            >
-              <View className="flex-row items-center">
-                <View className="h-12 w-12 rounded-xl bg-blue-900/10 items-center justify-center">
-                  <Ionicons name="color-palette-outline" size={24} color="#1b4f94" />
-                </View>
-                <View className="ml-4 flex-1">
-                  <Text className="text-[#1b4f94] font-bold text-lg">
-                    Quản lý đơn hàng
                   </Text>
                   <Text className="text-gray-500 text-sm mt-1">
                     Đổi nền, logo, banding

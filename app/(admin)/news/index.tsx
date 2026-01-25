@@ -9,7 +9,7 @@ import {
   Image,
   ScrollView,
 } from "react-native";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,6 +17,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Swipeable } from "react-native-gesture-handler";
 import { KeyboardAvoidingView, Platform } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+
+import {
+  getPublicImageUrl,
+  uploadImageToStorage,
+  deleteImageFromStorage,
+} from "@/lib/storage";
 
 /* ===============================
    ADMIN NEWS
@@ -26,15 +32,28 @@ export default function AdminNews() {
   const [editing, setEditing] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-
   // form states
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
   const [type, setType] = useState("");
   const [hashtag, setHashtag] = useState("");
-  const [image, setImage] = useState("");
+  const [image, setImage] = useState(""); // ✅ path/url/local uri
   const [isActive, setIsActive] = useState(true);
+
+  /* ===============================
+     HELPERS
+  ================================ */
+  const isLocalUri = (uri: string) => uri.startsWith("file:");
+  const isRemoteUrl = (uri: string) => uri.startsWith("http");
+
+  const getDisplayImage = (img?: string | null) => {
+    if (!img) return null;
+    // Nếu đang chọn ảnh local thì preview local
+    if (isLocalUri(img)) return img;
+    // Nếu DB đang lưu path storage => convert public url
+    return getPublicImageUrl(img);
+  };
 
   const pickImage = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -43,7 +62,7 @@ export default function AdminNews() {
     });
 
     if (!res.canceled) {
-      setImage(res.assets[0].uri);
+      setImage(res.assets[0].uri); // ✅ local uri
     }
   };
 
@@ -65,19 +84,17 @@ export default function AdminNews() {
     }, [])
   );
 
-
   /* ===============================
      OPEN EDIT
   ================================ */
   const openEdit = (item: any) => {
-
     setEditing(item);
     setTitle(item.title || "");
     setDescription(item.description || "");
     setContent(item.content || "");
-    setType(item.type || "news");
+    setType(item.type || "Tin Tức");
     setHashtag(item.hashtag || "");
-    setImage(item.image || "");
+    setImage(item.image || ""); // ✅ DB storage path
     setIsActive(item.is_active);
   };
 
@@ -87,26 +104,68 @@ export default function AdminNews() {
   const handleUpdate = async () => {
     if (!editing) return;
 
-    const { error } = await supabase
-      .from("news")
-      .update({
-        title,
-        description: description || null,
-        content: content || null,
-        type,
-        hashtag: hashtag || null,
-        image: image || null,
-        is_active: isActive,
-      })
-      .eq("id", editing.id);
+    try {
+      let imagePathToSave: string | null = editing.image || null;
 
-    if (error) {
-      Alert.alert("Lỗi", error.message);
-      return;
+      const hasNewImage =
+        image &&
+        image !== (editing.image || "") &&
+        (isLocalUri(image) || isRemoteUrl(image));
+
+      // ✅ Nếu user chọn ảnh mới (local uri hoặc url) => upload storage
+      if (hasNewImage) {
+        const fileName = `news_${editing.id}_${Date.now()}`;
+
+        const uploadedPath = await uploadImageToStorage(image, fileName);
+
+        if (!uploadedPath) {
+          Alert.alert("Lỗi", "Upload ảnh thất bại");
+          return;
+        }
+
+        // ✅ xoá ảnh cũ nếu có
+        if (editing.image) {
+          await deleteImageFromStorage(editing.image);
+        }
+
+        imagePathToSave = uploadedPath;
+      } else {
+        // Nếu user xoá ảnh
+        if (!image && editing.image) {
+          await deleteImageFromStorage(editing.image);
+          imagePathToSave = null;
+        }
+
+        // Nếu user paste trực tiếp 1 path storage (không phải http/file) => cứ lưu
+        if (image && !isLocalUri(image) && !isRemoteUrl(image)) {
+          imagePathToSave = image;
+        }
+      }
+
+      const { error } = await supabase
+        .from("news")
+        .update({
+          title,
+          description: description || null,
+          content: content || null,
+          type,
+          hashtag: hashtag || null,
+          image: imagePathToSave,
+          is_active: isActive,
+        })
+        .eq("id", editing.id);
+
+      if (error) {
+        Alert.alert("Lỗi", error.message);
+        return;
+      }
+
+      setEditing(null);
+      fetchNews();
+    } catch (err: any) {
+      console.log("handleUpdate error:", err?.message || err);
+      Alert.alert("Lỗi", "Có lỗi xảy ra khi cập nhật tin tức");
     }
-
-    setEditing(null);
-    fetchNews();
   };
 
   /* ===============================
@@ -119,6 +178,10 @@ export default function AdminNews() {
         text: "Xoá",
         style: "destructive",
         onPress: async () => {
+          // ✅ xoá ảnh trong storage trước
+          const item = news.find((n) => n.id === id);
+          if (item?.image) await deleteImageFromStorage(item.image);
+
           await supabase.from("news").delete().eq("id", id);
           fetchNews();
         },
@@ -141,37 +204,30 @@ export default function AdminNews() {
     </View>
   );
 
-
-
   /* ===============================
      RENDER ITEM
   ================================ */
   const renderItem = ({ item }: any) => {
+    const publicImg = item.image ? getPublicImageUrl(item.image) : null;
+
     return (
       <View className="mx-4 mb-4 rounded-2xl overflow-hidden bg-white border border-gray-100">
         <Swipeable
           renderRightActions={() => renderRightActions(item.id)}
           overshootRight={false}
         >
-          <Pressable
-            onPress={() => openEdit(item)}
-            className="p-4 bg-white"
-          >
+          <Pressable onPress={() => openEdit(item)} className="p-4 bg-white">
             <View className="flex-row gap-4">
               {/* IMAGE */}
-              {item.image ? (
+              {publicImg ? (
                 <Image
-                  source={{ uri: item.image }}
+                  source={{ uri: publicImg }}
                   className="w-20 h-28 rounded-xl bg-gray-100"
                   resizeMode="cover"
                 />
               ) : (
                 <View className="w-20 h-20 rounded-xl bg-gray-100 items-center justify-center">
-                  <Ionicons
-                    name="image-outline"
-                    size={24}
-                    color="#9ca3af"
-                  />
+                  <Ionicons name="image-outline" size={24} color="#9ca3af" />
                 </View>
               )}
 
@@ -191,8 +247,7 @@ export default function AdminNews() {
                 )}
 
                 <Text className="text-xs text-gray-400 mt-1">
-                  {item.type || "news"} ·{" "}
-                  {item.is_active ? "Hiển thị" : "Ẩn"}
+                  {item.type || "news"} · {item.is_active ? "Hiển thị" : "Ẩn"}
                 </Text>
               </View>
             </View>
@@ -240,7 +295,7 @@ export default function AdminNews() {
           >
             {/* MODAL CONTENT */}
             <Pressable
-              onPress={() => { }}
+              onPress={() => {}}
               className="bg-white rounded-t-3xl p-5 max-h-[90%]"
             >
               {/* ===== HEADER ===== */}
@@ -266,9 +321,9 @@ export default function AdminNews() {
                 </Text>
 
                 <View className="h-40 rounded-2xl bg-gray-100 overflow-hidden items-center justify-center mb-3">
-                  {image ? (
+                  {getDisplayImage(image) ? (
                     <Image
-                      source={{ uri: image }}
+                      source={{ uri: getDisplayImage(image)! }}
                       className="w-full h-full"
                       resizeMode="contain"
                     />
@@ -292,7 +347,7 @@ export default function AdminNews() {
                     className="flex-1 border border-gray-200 rounded-xl py-2 items-center"
                   >
                     <Text className="text-base text-[#1b4f94]">
-                      Dán link ảnh
+                      Xoá ảnh
                     </Text>
                   </Pressable>
                 </View>
@@ -301,7 +356,7 @@ export default function AdminNews() {
                 <TextInput
                   value={image}
                   onChangeText={setImage}
-                  placeholder="https://image-url..."
+                  placeholder="Dán link ảnh (http...) hoặc path storage..."
                   autoCapitalize="none"
                   autoCorrect={false}
                   className="border border-gray-200 rounded-xl p-3 mb-6"
@@ -347,33 +402,35 @@ export default function AdminNews() {
                 </Text>
 
                 <View className="flex-row flex-wrap gap-2 mb-4">
-                  {/* NEWS */}
                   <Pressable
                     onPress={() => setType("Tin Tức")}
-                    className={`px-4 py-2 rounded-full ${type === "Tin Tức"
-                      ? "bg-[#1b4f94]" : "bg-gray-200"
-                      }`}
+                    className={`px-4 py-2 rounded-full ${
+                      type === "Tin Tức" ? "bg-[#1b4f94]" : "bg-gray-200"
+                    }`}
                   >
                     <Text
-                      className={`text-sm ${type === "Tin Tức" ? "text-white font-bold"
-                        : "text-gray-700"
-                        }`}
+                      className={`text-sm ${
+                        type === "Tin Tức"
+                          ? "text-white font-bold"
+                          : "text-gray-700"
+                      }`}
                     >
                       Tin tức
                     </Text>
                   </Pressable>
 
-                  {/* PROMOTION */}
                   <Pressable
                     onPress={() => setType("Khuyến Mãi")}
-                    className={`px-4 py-2 rounded-full ${type === "Khuyến Mãi"
-                      ? "bg-[#1b4f94]" : "bg-gray-200"
-                      }`}
+                    className={`px-4 py-2 rounded-full ${
+                      type === "Khuyến Mãi" ? "bg-[#1b4f94]" : "bg-gray-200"
+                    }`}
                   >
                     <Text
-                      className={`text-sm ${type === "Khuyến Mãi" ? "text-white font-bold"
-                        : "text-gray-700"
-                        }`}
+                      className={`text-sm ${
+                        type === "Khuyến Mãi"
+                          ? "text-white font-bold"
+                          : "text-gray-700"
+                      }`}
                     >
                       Khuyến mãi
                     </Text>
@@ -392,8 +449,9 @@ export default function AdminNews() {
                   className="mb-3"
                 >
                   <Text
-                    className={`font-semibold ${isActive ? "text-green-600" : "text-gray-500"
-                      }`}
+                    className={`font-semibold ${
+                      isActive ? "text-green-600" : "text-gray-500"
+                    }`}
                   >
                     Trạng thái: {isActive ? "Hiển thị" : "Ẩn"}
                   </Text>
@@ -413,24 +471,19 @@ export default function AdminNews() {
           </Pressable>
         </KeyboardAvoidingView>
       </Modal>
+
       {/* ===== DELETE CONFIRM MODAL ===== */}
-      <Modal
-        visible={!!deleteId}
-        transparent
-        animationType="slide"
-      >
+      <Modal visible={!!deleteId} transparent animationType="slide">
         <Pressable
           className="flex-1 bg-black/40 justify-end"
           onPress={() => setDeleteId(null)}
         >
           <Pressable
-            onPress={() => { }}
+            onPress={() => {}}
             className="bg-white rounded-t-3xl px-6 pt-5 pb-8"
           >
-            {/* HANDLE BAR */}
             <View className="w-12 h-1 bg-gray-300 rounded-full self-center mb-4" />
 
-            {/* TITLE */}
             <Text className="text-lg font-bold text-[#1b4f94] text-center mb-2">
               Xoá tin tức?
             </Text>
@@ -439,40 +492,35 @@ export default function AdminNews() {
               Hành động này không thể hoàn tác.
             </Text>
 
-            {/* ACTIONS */}
             <View className="flex-row gap-3">
               <Pressable
                 onPress={() => setDeleteId(null)}
                 className="flex-1 border border-gray-300 rounded-xl py-3 items-center"
               >
-                <Text className="font-semibold text-gray-600">
-                  Huỷ
-                </Text>
+                <Text className="font-semibold text-gray-600">Huỷ</Text>
               </Pressable>
 
               <Pressable
                 onPress={async () => {
                   if (!deleteId) return;
 
-                  await supabase
-                    .from("news")
-                    .delete()
-                    .eq("id", deleteId);
+                  // ✅ xoá ảnh storage
+                  const item = news.find((n) => n.id === deleteId);
+                  if (item?.image) await deleteImageFromStorage(item.image);
+
+                  await supabase.from("news").delete().eq("id", deleteId);
 
                   setDeleteId(null);
                   fetchNews();
                 }}
                 className="flex-1 bg-red-600 rounded-xl py-3 items-center"
               >
-                <Text className="font-bold text-white">
-                  Xoá
-                </Text>
+                <Text className="font-bold text-white">Xoá</Text>
               </Pressable>
             </View>
           </Pressable>
         </Pressable>
       </Modal>
-
     </SafeAreaView>
   );
 }

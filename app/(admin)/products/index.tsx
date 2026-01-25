@@ -36,7 +36,7 @@ const CategoryPill = ({
 }) => (
   <Pressable
     onPress={onPress}
-    className={`mr-3 h-10 px-5 rounded-full items-center justify-center ${active ? "bg-[#1C4273]" : "bg-gray-200"
+    className={`mr-3 h-9 px-5 rounded-full items-center justify-center ${active ? "bg-[#1C4273]" : "bg-gray-200"
       }`}
   >
     <Text
@@ -62,11 +62,32 @@ export default function AdminProducts() {
   const [price, setPrice] = useState("");
   const [salePrice, setSalePrice] = useState("");
   const [image, setImage] = useState<string | null>(null);
+  const swipeRefs = useRef<Record<string, Swipeable | null>>({});
 
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
-  const [deleteId, setDeleteId] = useState<string | null>(null);
 
+  type ConfirmState = {
+    visible: boolean;
+    title: string;
+    desc?: string;
+    confirmText?: string;
+    variant?: "danger" | "primary";
+    onConfirm?: () => void;
+  };
+
+  const [confirm, setConfirm] = useState<ConfirmState>({
+    visible: false,
+    title: "",
+  });
+
+  const openConfirm = (payload: Omit<ConfirmState, "visible">) => {
+    setConfirm({ visible: true, ...payload });
+  };
+
+  const closeConfirm = () => {
+    setConfirm({ visible: false, title: "" });
+  };
 
   /* ===============================
      FETCH DATA
@@ -173,6 +194,7 @@ export default function AdminProducts() {
         price: Number(price),
         sale_price: salePrice ? Number(salePrice) : null,
         image: imagePath,
+        category_id: categoryId,
       })
       .eq("id", editing.id);
 
@@ -180,16 +202,37 @@ export default function AdminProducts() {
     fetchProducts();
   };
 
-  const handleDelete = (id: string) => {
-    setDeleteId(id);
+  const toggleProductActive = async (item: any) => {
+    const isActive = item.is_active !== false;
+
+    const { error } = await supabase
+      .from("products")
+      .update({ is_active: !isActive })
+      .eq("id", item.id);
+
+    if (error) return;
+
+    // ✅ update state tại chỗ -> item KHÔNG bị đổi vị trí
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === item.id ? { ...p, is_active: !isActive } : p
+      )
+    );
   };
 
-  const confirmDelete = async () => {
-    if (!deleteId) return;
 
-    await supabase.from("products").delete().eq("id", deleteId);
-    setDeleteId(null);
-    fetchProducts();
+  const setAllProductsActive = async (value: boolean) => {
+    const { error } = await supabase
+      .from("products")
+      .update({ is_active: value })
+      .not("id", "is", null); // ✅ update tất cả rows
+
+    if (error) {
+      console.log("setAllProductsActive error:", error);
+      return;
+    }
+
+    setProducts((prev) => prev.map((p) => ({ ...p, is_active: value })));
   };
 
   useFocusEffect(
@@ -204,43 +247,91 @@ export default function AdminProducts() {
   /* ===============================
      RENDER ITEM
   ================================ */
-  const renderRightActions = (id: string) => (
-    <Pressable
-      onPress={() => handleDelete(id)}
-      className="bg-red-600 w-20 h-full items-center justify-center"
-    >
-      <Ionicons name="trash-outline" size={24} color="white" />
-      <Text className="text-white text-xs mt-1">Xoá</Text>
-    </Pressable>
-  );
+  const renderRightActions = (item: any) => {
+    const isActive = item.is_active !== false;
+
+    return (
+      <View className="h-full">
+        <Pressable
+          onPress={() => {
+            // đóng swipe trước
+            swipeRefs.current[item.id]?.close();
+
+            openConfirm({
+              title: isActive ? "Tắt món này?" : "Bật món này?",
+              desc: isActive
+                ? "Món sẽ không hiển thị ở phía user."
+                : "Món sẽ hiển thị lại ở phía user.",
+              confirmText: isActive ? "Tắt món" : "Bật món",
+              variant: isActive ? "danger" : "primary",
+              onConfirm: () => toggleProductActive(item),
+            });
+          }}
+          className={`h-full w-16 items-center justify-center ${isActive ? "bg-red-600" : "bg-green-600"
+            }`}
+          style={{
+            borderTopRightRadius: 16,
+            borderBottomRightRadius: 16,
+          }}
+        >
+          <Ionicons
+            name={isActive ? "power" : "refresh"}
+            size={22}
+            color="#fff"
+          />
+          <Text className="text-white text-xs mt-1 font-semibold">
+            {isActive ? "OFF" : "ON"}
+          </Text>
+        </Pressable>
+      </View>
+    );
+  };
+
+
 
   const renderItem = ({ item }: any) => {
     const imageUrl = getPublicImageUrl(item.image);
+    const isActive = item.is_active !== false;
 
     return (
-      <Animated.View style={{ opacity: fadeAnim }}>
-        <View className="mx-4 mb-4 rounded-2xl overflow-hidden bg-white border border-gray-100">
-          <Swipeable
-            renderRightActions={() => renderRightActions(item.id)}
-            overshootRight={false}
-          >
-            <Pressable onPress={() => openEdit(item)} className="p-4 relative">
-              {/* CATEGORY BADGE – TOP RIGHT */}
-              {item.categories?.title && (
-                <View className="absolute top-3 right-3 bg-[#1C4273]/10 px-3 py-1 rounded-full">
-                  <Text className="text-[11px] text-[#1b4f94] font-semibold">
-                    {item.categories.title}
-                  </Text>
-                </View>
-              )}
+      <View className="mx-4 mb-4 rounded-2xl overflow-hidden bg-white border border-gray-100">
+        <Swipeable
+          ref={(ref) => {
+            swipeRefs.current[item.id] = ref;
+          }}
+          renderRightActions={() => renderRightActions(item)}
+          overshootRight={false}
+        >
+          <Pressable onPress={() => openEdit(item)} className="p-4 bg-white">
+            {/* DOT trạng thái - không bị opacity */}
+            {!isActive && (
+              <View className="absolute top-3 left-3 z-50">
+                <View className="w-4 h-4 rounded-full bg-red-600 border-2 border-white" />
+              </View>
+            )}
 
+            {/* CATEGORY BADGE – TOP RIGHT */}
+            {item.categories?.title && (
+              <View className="absolute top-3 right-3 bg-[#1C4273]/10 px-3 py-1 rounded-full z-50">
+                <Text className="text-[11px] text-[#1b4f94] font-semibold">
+                  {item.categories.title}
+                </Text>
+              </View>
+            )}
+
+            {/* content opacity */}
+            <View className={`${!isActive ? "opacity-60" : "opacity-100"}`}>
               <View className="flex-row gap-4">
-                {imageUrl && (
+                {imageUrl ? (
                   <Image
                     source={{ uri: imageUrl }}
                     className="w-20 h-20 rounded-xl"
                     resizeMode="cover"
                   />
+                ) : (
+                  <View className="w-20 h-20 rounded-xl bg-gray-100 items-center justify-center">
+                    <Ionicons name="image-outline" size={24} color="#9ca3af" />
+                  </View>
                 )}
 
                 <View className="flex-1 pr-6">
@@ -264,17 +355,14 @@ export default function AdminProducts() {
                   </Text>
 
                   {item.stats && (
-                    <Text className="text-xs text-gray-400 mt-1">
-                      {item.stats}
-                    </Text>
+                    <Text className="text-xs text-gray-400 mt-1">{item.stats}</Text>
                   )}
                 </View>
               </View>
-            </Pressable>
-          </Swipeable>
-        </View>
-      </Animated.View>
-
+            </View>
+          </Pressable>
+        </Swipeable>
+      </View>
     );
   };
 
@@ -288,9 +376,39 @@ export default function AdminProducts() {
         <Text className="text-2xl font-bold text-[#1C4273]">
           QUẢN LÝ SẢN PHẨM
         </Text>
-        <Pressable onPress={() => router.push("/(admin)/products/create")}>
-          <Ionicons name="add-circle" size={28} color="#1C4273" />
-        </Pressable>
+        <View className="flex-row items-center gap-2">
+          {/* ON ALL */}
+          <Pressable
+            onPress={() =>
+              openConfirm({
+                title: "Bật tất cả món?",
+                desc: "Tất cả sản phẩm sẽ được bật và hiển thị bên user.",
+                confirmText: "Bật tất cả",
+                variant: "primary",
+                onConfirm: () => setAllProductsActive(true),
+              })
+            }
+            className="w-8 h-8 rounded-full bg-green-600 items-center justify-center"
+          >
+            <Ionicons name="power" size={18} color="#fff" />
+          </Pressable>
+
+          {/* OFF ALL */}
+          <Pressable
+            onPress={() =>
+              openConfirm({
+                title: "Tắt tất cả món?",
+                desc: "Tất cả sản phẩm sẽ bị tắt và ẩn khỏi user.",
+                confirmText: "Tắt tất cả",
+                variant: "danger",
+                onConfirm: () => setAllProductsActive(false),
+              })
+            }
+            className="w-8 h-8 rounded-full bg-red-600 items-center justify-center"
+          >
+            <Ionicons name="power" size={18} color="#fff" />
+          </Pressable>
+        </View>
       </View>
 
       {/* LIST */}
@@ -487,56 +605,65 @@ export default function AdminProducts() {
           </KeyboardAvoidingView>
         </Pressable>
       </Modal>
-      <Modal visible={!!deleteId} transparent animationType="slide">
-        <Pressable
-          className="flex-1 bg-black/40 justify-end"
-          onPress={() => setDeleteId(null)}
-        >
-          <Pressable
-            onPress={() => { }}
-            className="bg-white rounded-t-3xl p-6"
-          >
+      {/* ===== CONFIRM MODAL ===== */}
+      <Modal visible={confirm.visible} transparent animationType="slide">
+        <Pressable className="flex-1 bg-black/40 justify-end" onPress={closeConfirm}>
+          <Pressable onPress={() => { }} className="bg-white rounded-t-3xl p-6">
             {/* ICON */}
             <View className="items-center mb-4">
-              <View className="w-14 h-14 rounded-full bg-red-100 items-center justify-center">
-                <Ionicons name="trash-outline" size={28} color="#dc2626" />
+              <View
+                className={`w-14 h-14 rounded-full items-center justify-center ${confirm.variant === "danger" ? "bg-red-100" : "bg-[#1C4273]/10"
+                  }`}
+              >
+                <Ionicons
+                  name={
+                    confirm.variant === "danger"
+                      ? "warning-outline"
+                      : "help-circle-outline"
+                  }
+                  size={28}
+                  color={confirm.variant === "danger" ? "#dc2626" : "#1C4273"}
+                />
               </View>
             </View>
 
             {/* TITLE */}
             <Text className="text-xl font-bold text-center text-gray-900 mb-2">
-              Xoá sản phẩm?
+              {confirm.title}
             </Text>
 
             {/* DESC */}
-            <Text className="text-center text-gray-500 mb-6">
-              Hành động này không thể hoàn tác. Dữ liệu sẽ bị xoá vĩnh viễn.
-            </Text>
+            {!!confirm.desc && (
+              <Text className="text-center text-gray-500 mb-6">{confirm.desc}</Text>
+            )}
 
             {/* ACTIONS */}
             <View className="flex-row gap-3">
               <Pressable
-                onPress={() => setDeleteId(null)}
+                onPress={closeConfirm}
                 className="flex-1 py-3 rounded-xl border border-gray-200 items-center"
               >
-                <Text className="text-gray-700 font-semibold">
-                  Huỷ
-                </Text>
+                <Text className="text-gray-700 font-semibold">Huỷ</Text>
               </Pressable>
 
               <Pressable
-                onPress={confirmDelete}
-                className="flex-1 py-3 rounded-xl bg-red-600 items-center"
+                onPress={() => {
+                  closeConfirm();
+                  confirm.onConfirm?.();
+                  // ✅ đóng tất cả swipe đang mở (trường hợp user swipe nhiều item)
+                  Object.values(swipeRefs.current).forEach((ref) => ref?.close());
+                }}
+                className={`flex-1 py-3 rounded-xl items-center ${confirm.variant === "danger" ? "bg-red-600" : "bg-[#1C4273]"
+                  }`}
               >
                 <Text className="text-white font-bold">
-                  Xoá
+                  {confirm.confirmText || "Xác nhận"}
                 </Text>
               </Pressable>
             </View>
           </Pressable>
         </Pressable>
       </Modal>
-
     </SafeAreaView>
   );
 }

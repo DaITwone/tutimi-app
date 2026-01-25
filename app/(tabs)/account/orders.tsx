@@ -12,8 +12,6 @@ import {
   RefreshControl,
   ImageBackground,
   Modal,
-  TouchableWithoutFeedback,
-  Keyboard,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";

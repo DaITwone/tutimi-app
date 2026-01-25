@@ -124,18 +124,18 @@ export default function CheckoutScreen() {
   const { userId } = useAuth();
 
   const {
-  refreshCart,
-  discountAmount,
-  selectedVoucher,
-  setDiscountAmount,
-  setSelectedVoucher,
+    refreshCart,
+    discountAmount,
+    selectedVoucher,
+    setDiscountAmount,
+    setSelectedVoucher,
 
-  // ✅ NEW
-  paymentMethod,
-  setPaymentMethod,
-  selectedBank,
-  setSelectedBank,
-} = useCart();
+    // ✅ NEW
+    paymentMethod,
+    setPaymentMethod,
+    selectedBank,
+    setSelectedBank,
+  } = useCart();
 
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -388,11 +388,10 @@ export default function CheckoutScreen() {
                       setShowBankModal(true);
                     }
                   }}
-                  className={`flex-row items-center mb-3 p-3 rounded-xl border ${
-                    active
+                  className={`flex-row items-center mb-3 p-3 rounded-xl border ${active
                       ? "border-[#1F4171] bg-blue-50"
                       : "border-gray-200"
-                  }`}
+                    }`}
                 >
                   {/* STICKER IMAGE */}
                   <View className="w-10 h-10 mr-3 items-center justify-center bg-white rounded-full">
@@ -461,7 +460,7 @@ export default function CheckoutScreen() {
                         {/* LEFT: NAME + QTY */}
                         <View className="flex-1 pr-2">
                           <Text className="font-semibold text-[#1b4f94]">
-                            {item.products.name} ({item.size})
+                            {item.products.name} {item.size ? `(${item.size})` : ""}
                           </Text>
 
                           <Text className="text-sm text-gray-500 mt-1">
@@ -677,6 +676,7 @@ export default function CheckoutScreen() {
                 <Pressable
                   onPress={() => {
                     setShowSuccessModal(false);
+                    router.dismissAll();
                     router.replace("/(tabs)/account/orders");
                   }}
                   className="flex-1 mr-2 py-3 rounded-2xl border border-gray-300 items-center bg-gray-200"

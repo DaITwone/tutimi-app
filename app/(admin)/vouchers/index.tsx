@@ -9,7 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,8 +22,6 @@ import { useAuth } from "@/contexts/AuthContext";
 export default function AdminVouchers() {
   const [vouchers, setVouchers] = useState<any[]>([]);
   const [editing, setEditing] = useState<any>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-
   const [title, setTitle] = useState("");
   const [discountValue, setDiscountValue] = useState("");
   const [isActive, setIsActive] = useState(true);
@@ -34,12 +32,53 @@ export default function AdminVouchers() {
   const [forNewUser, setForNewUser] = useState(false);
   const [maxUsage, setMaxUsage] = useState("1");
   const { user, isLoggedIn, loading, refreshUser } = useAuth();
+  const swipeRefs = useRef<Record<string, Swipeable | null>>({});
+  const [openedId, setOpenedId] = useState<string | null>(null);
+
+  type ConfirmState = {
+    visible: boolean;
+    title: string;
+    desc?: string;
+    confirmText?: string;
+    variant?: "danger" | "primary";
+    onConfirm?: () => void;
+  };
+
+  const [confirm, setConfirm] = useState<ConfirmState>({
+    visible: false,
+    title: "",
+  });
+
+  const openConfirm = (payload: Omit<ConfirmState, "visible">) => {
+    setConfirm({ visible: true, ...payload });
+  };
+
+  const closeConfirm = () => {
+    setConfirm({ visible: false, title: "" });
+  };
+
 
   useFocusEffect(
     useCallback(() => {
       refreshUser();
     }, [])
   );
+
+  const toggleVoucherActive = async (item: any) => {
+    const isActive = item.is_active !== false;
+
+    const { error } = await supabase
+      .from("vouchers")
+      .update({ is_active: !isActive })
+      .eq("id", item.id);
+
+    if (error) {
+      console.log("toggleVoucherActive error:", error);
+      return;
+    }
+
+    fetchVouchers();
+  };
 
 
   /* ===============================
@@ -129,17 +168,43 @@ export default function AdminVouchers() {
   /* ===============================
      SWIPE ACTION
      =============================== */
-  const renderRightActions = (id: string) => (
-    <View className="h-full">
+  const renderRightActions = (item: any) => {
+    const isActive = item.is_active !== false;
+
+    return (
       <Pressable
-        onPress={() => setDeleteId(id)}
-        className="bg-red-600 h-full w-20 items-center justify-center"
+        onPress={() => {
+          swipeRefs.current[item.id]?.close();
+
+          openConfirm({
+            title: isActive ? "Tắt voucher này?" : "Bật voucher này?",
+            desc: isActive
+              ? "Voucher sẽ không còn áp dụng cho người dùng."
+              : "Voucher sẽ được áp dụng lại cho người dùng.",
+            confirmText: isActive ? "Tắt" : "Bật",
+            variant: isActive ? "danger" : "primary",
+            onConfirm: () => toggleVoucherActive(item),
+          });
+        }}
+        className={`h-full w-16 items-center justify-center ${isActive ? "bg-red-600" : "bg-green-600"
+          }`}
+        style={{
+          borderTopRightRadius: 16,
+          borderBottomRightRadius: 16,
+        }}
       >
-        <Ionicons name="trash-outline" size={24} color="#fff" />
-        <Text className="text-white text-xs mt-1">Xoá</Text>
+        <Ionicons
+          name={isActive ? "power-outline" : "refresh-outline"}
+          size={22}
+          color="#fff"
+        />
+        <Text className="text-white text-xs mt-1 font-semibold">
+          {isActive ? "OFF" : "ON"}
+        </Text>
       </Pressable>
-    </View>
-  );
+    );
+  };
+
 
   /* ===============================
      RENDER ITEM
@@ -148,13 +213,25 @@ export default function AdminVouchers() {
     return (
       <View className="mx-4 mb-4 rounded-2xl overflow-hidden bg-white border border-gray-100">
         <Swipeable
-          renderRightActions={() => renderRightActions(item.id)}
+          ref={(ref) => {
+            swipeRefs.current[item.id] = ref;
+          }}
+          friction={2}
+          rightThreshold={40}
           overshootRight={false}
+          enableTrackpadTwoFingerGesture
+          onSwipeableOpen={() => {
+            if (openedId && openedId !== item.id) {
+              swipeRefs.current[openedId]?.close();
+            }
+            setOpenedId(item.id);
+          }}
+          onSwipeableClose={() => {
+            if (openedId === item.id) setOpenedId(null);
+          }}
+          renderRightActions={() => renderRightActions(item)}
         >
-          <Pressable
-            onPress={() => openEdit(item)}
-            className="p-4"
-          >
+          <Pressable onPress={() => openEdit(item)} className="p-4 bg-white">
             {/* CODE BADGE */}
             <View className="absolute top-3 right-3 bg-[#1b4f94]/10 px-3 py-1 rounded-full">
               <Text className="text-xs font-bold text-[#1b4f94]">
@@ -186,22 +263,25 @@ export default function AdminVouchers() {
 
             {/* STATUS */}
             <View className="mt-2">
-              <Text
-                className={`text-xs font-semibold ${item.is_active
-                  ? "text-green-600"
-                  : "text-gray-400"
-                  }`}
-              >
-                {item.is_active ? "● Đang áp dụng" : "● Tạm tắt"}
-              </Text>
+              <View className="flex-row items-center gap-2 mt-1">
+                <View
+                  className={`w-3.5 h-3.5 rounded-full border-2 border-white ${item.is_active !== false ? "bg-green-600" : "bg-red-600"
+                    }`}
+                />
+
+                <Text
+                  className={`text-xs font-semibold ${item.is_active !== false ? "text-green-600" : "text-red-400"
+                    }`}
+                >
+                  {item.is_active !== false ? "Đang áp dụng" : "Tạm tắt"}
+                </Text>
+              </View>
             </View>
           </Pressable>
         </Swipeable>
       </View>
-
     );
   };
-
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
@@ -366,25 +446,13 @@ export default function AdminVouchers() {
 
                 <Pressable
                   onPress={() => setForNewUser(!forNewUser)}
-                  className="mb-2"
+                  className="mb-4"
                 >
                   <Text
                     className={`font-semibold ${forNewUser ? "text-green-600" : "text-gray-500"
                       }`}
                   >
                     Chỉ dành cho user mới: {forNewUser ? "Có" : "Không"}
-                  </Text>
-                </Pressable>
-
-                <Pressable
-                  onPress={() => setIsActive(!isActive)}
-                  className="mb-6"
-                >
-                  <Text
-                    className={`font-semibold ${isActive ? "text-green-600" : "text-gray-500"
-                      }`}
-                  >
-                    Trạng thái: {isActive ? "Đang bật" : "Tắt"}
                   </Text>
                 </Pressable>
 
@@ -403,60 +471,57 @@ export default function AdminVouchers() {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* ===== DELETE CONFIRM MODAL ===== */}
-      <Modal
-        visible={!!deleteId}
-        transparent
-        animationType="slide"
-      >
-
-        <Pressable
-          className="flex-1 bg-black/40 justify-end"
-          onPress={() => setDeleteId(null)}
-        >
-          <Pressable
-            onPress={() => { }}
-            className="bg-white rounded-t-3xl px-6 pt-5 pb-8"
-          >
-            {/* HANDLE BAR */}
-            <View className="w-12 h-1 bg-gray-300 rounded-full self-center mb-4" />
+      {/* ===== CONFIRM MODAL ===== */}
+      <Modal visible={confirm.visible} transparent animationType="slide">
+        <Pressable className="flex-1 bg-black/40 justify-end" onPress={closeConfirm}>
+          <Pressable onPress={() => { }} className="bg-white rounded-t-3xl p-6">
+            {/* ICON */}
+            <View className="items-center mb-4">
+              <View
+                className={`w-14 h-14 rounded-full items-center justify-center ${confirm.variant === "danger" ? "bg-red-100" : "bg-[#1C4273]/10"
+                  }`}
+              >
+                <Ionicons
+                  name={
+                    confirm.variant === "danger"
+                      ? "warning-outline"
+                      : "help-circle-outline"
+                  }
+                  size={28}
+                  color={confirm.variant === "danger" ? "#dc2626" : "#1C4273"}
+                />
+              </View>
+            </View>
 
             {/* TITLE */}
-            <Text className="text-lg font-bold text-[#1b4f94] text-center mb-2">
-              Xoá voucher?
+            <Text className="text-xl font-bold text-center text-gray-900 mb-2">
+              {confirm.title}
             </Text>
 
-            <Text className="text-center text-gray-500 mb-6">
-              Voucher này sẽ bị xoá vĩnh viễn và không thể khôi phục.
-            </Text>
+            {!!confirm.desc && (
+              <Text className="text-center text-gray-500 mb-6">{confirm.desc}</Text>
+            )}
 
             {/* ACTIONS */}
             <View className="flex-row gap-3">
               <Pressable
-                onPress={() => setDeleteId(null)}
-                className="flex-1 border border-gray-300 rounded-xl py-3 items-center"
+                onPress={closeConfirm}
+                className="flex-1 py-3 rounded-xl border border-gray-200 items-center"
               >
-                <Text className="font-semibold text-gray-600">
-                  Huỷ
-                </Text>
+                <Text className="text-gray-700 font-semibold">Huỷ</Text>
               </Pressable>
 
               <Pressable
-                onPress={async () => {
-                  if (!deleteId) return;
-
-                  await supabase
-                    .from("vouchers")
-                    .delete()
-                    .eq("id", deleteId);
-
-                  setDeleteId(null);
-                  fetchVouchers();
+                onPress={() => {
+                  closeConfirm();
+                  confirm.onConfirm?.();
+                  Object.values(swipeRefs.current).forEach((ref) => ref?.close());
                 }}
-                className="flex-1 bg-red-600 rounded-xl py-3 items-center"
+                className={`flex-1 py-3 rounded-xl items-center ${confirm.variant === "danger" ? "bg-red-600" : "bg-[#1C4273]"
+                  }`}
               >
-                <Text className="font-bold text-white">
-                  Xoá
+                <Text className="text-white font-bold">
+                  {confirm.confirmText || "Xác nhận"}
                 </Text>
               </Pressable>
             </View>

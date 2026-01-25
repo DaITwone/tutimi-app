@@ -147,7 +147,7 @@ export default function MenuScreen() {
           resizeMode="cover"
           className="flex-1"
         >
-          <View className="flex-1 bg-white/80">
+          <View className="flex-1 bg-white/85">
             <SafeAreaView edges={["top"]} className="bg-transparent">
               {/* ===== PAGE HEADER (Non-sticky) ===== */}
               <View className="px-4 pb-3">

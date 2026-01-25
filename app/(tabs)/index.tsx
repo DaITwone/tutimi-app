@@ -223,7 +223,7 @@ export default function HomeScreen() {
                         </SafeAreaView>
 
                         {/* ===== CONTENT ===== */}
-                        <View className="bg-white rounded-t-xl">
+                        <View className="bg-white rounded-t-xl overflow-hidden">
                             {bgUrl && (
                                 <ImageBackground
                                     source={{ uri: bgUrl }}

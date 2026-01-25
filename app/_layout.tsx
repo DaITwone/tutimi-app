@@ -18,13 +18,6 @@ function AppContent() {
 
   const FLOATING_CART_ROUTES = ["/", "/menu"];
 
-  const shouldShowFloatingCart =
-    totalQty > 0 &&
-    (
-      FLOATING_CART_ROUTES.includes(pathname) ||
-      pathname.startsWith("/product/")
-    );
-
   const shouldShowFloatingCartRaw =
     totalQty > 0 &&
     (

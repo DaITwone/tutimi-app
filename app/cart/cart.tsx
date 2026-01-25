@@ -9,6 +9,7 @@ import {
   Text,
   View,
   ImageBackground,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../contexts/AuthContext";
@@ -456,46 +457,70 @@ export default function CartScreen() {
       )}
 
       {/* ===== DELETE MODAL ===== */}
-      {showDeleteModal && (
-        <View className="absolute inset-0 bg-black/40 items-center justify-center">
-          <View className="bg-white w-[85%] rounded-2xl p-5">
-            <View className="w-16 h-16 bg-red-500 rounded-full items-center justify-center self-center">
-              <Ionicons
-                name="trash-outline"
-                size={28}
-                color="white"
-              />
+      <Modal
+        visible={showDeleteModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowDeleteModal(false)}
+      >
+        {/* Overlay */}
+        <Pressable
+          className="flex-1 bg-black/40 justify-end"
+          onPress={() => {
+            setShowDeleteModal(false);
+            setSelectedItem(null);
+          }}
+        >
+          {/* Sheet */}
+          <Pressable
+            onPress={(e) => e.stopPropagation()}
+            className="bg-white rounded-t-[32px] px-5 pt-4 pb-6"
+          >
+            {/* Handle */}
+            <View className="items-center mb-4">
+              <View className="w-16 h-1.5 rounded-full bg-gray-300" />
             </View>
-            <Text className="text-lg font-bold text-center text-red-500 mt-3">
-              Bạn muốn xóa sản phẩm?
+
+            {/* Icon */}
+            <View className="w-14 h-14 bg-red-500 rounded-full items-center justify-center self-center">
+              <Ionicons name="trash-outline" size={20} color="white" />
+            </View>
+
+            {/* Title */}
+            <Text className="text-xl font-extrabold text-center text-[#1c4273] mt-4">
+              Xóa sản phẩm?
             </Text>
-            <Text className="text-gray-500 text-center mt-2 text-lg">
+
+            {/* Product name */}
+            <Text className="text-gray-500 text-center mt-2 text-base">
               {selectedItem?.products.name}
             </Text>
+
+            {/* Actions */}
             <View className="flex-row mt-6">
               <Pressable
                 onPress={() => {
                   setShowDeleteModal(false);
                   setSelectedItem(null);
                 }}
-                className="flex-1 mr-2 py-3 rounded-xl border border-gray-300"
+                className="flex-1 border border-gray-200 py-4 rounded-[22px] items-center"
               >
-                <Text className="text-center font-semibold text-gray-600">
-                  Huỷ
-                </Text>
+                <Text className="font-bold text-gray-600">Huỷ</Text>
               </Pressable>
+
               <Pressable
                 onPress={confirmRemoveItem}
-                className="flex-1 ml-2 py-3 rounded-xl bg-red-500"
+                className="flex-1 py-4 rounded-[22px] items-center ml-4 bg-red-500"
               >
-                <Text className="text-center font-semibold text-white">
-                  Xoá
-                </Text>
+                <Text className="text-white font-bold">Xoá</Text>
               </Pressable>
             </View>
-          </View>
-        </View>
-      )}
+
+            <View className="h-2" />
+          </Pressable>
+        </Pressable>
+      </Modal>
+
       {/* ===== VOUCHER MODAL ===== */}
       <VoucherModal
         visible={showVoucherModal}

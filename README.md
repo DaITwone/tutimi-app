@@ -45,17 +45,42 @@ UI/UX:     Gesture handlers, animations, responsive layouts
 
 ---
 
-## 📸 Screenshots
+## 📸 Application Screenshots
 
-| Customer Home | Product Menu |
-|:---:|:---:|
-| ![Home Screen](./docs/screenshots/home.PNG) | ![Menu Screen](./docs/screenshots/menu.PNG) |
-| **🏠 Customer Home** | **📋 Product Menu** |
-
-| Theme Settings | Admin Dashboard |
-|:---:|:---:|
-| ![Theme](./docs/screenshots/theme.PNG) | ![Admin](./docs/screenshots/admin-products.PNG) |
-| **🎨 Theme Settings** | **🛠️ Admin Dashboard** |
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="./docs/screenshots/home.PNG" alt="Home Screen" width="100%"/>
+      <br/>
+      <strong>🏠 Home</strong>
+      <br/>
+      <em>Main interface with banners and product categories</em>
+    </td>
+    <td width="50%" align="center">
+      <img src="./docs/screenshots/menu.PNG" alt="Menu Screen" width="100%"/>
+      <br/>
+      <strong>📋 Menu</strong>
+      <br/>
+      <em>Product list with category-based filtering</em>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="./docs/screenshots/theme.PNG" alt="Theme Customization" width="100%"/>
+      <br/>
+      <strong>🎨 Theme Customization</strong>
+      <br/>
+      <em>Change application theme and visual style</em>
+    </td>
+    <td width="50%" align="center">
+      <img src="./docs/screenshots/admin-products.PNG" alt="Admin Dashboard" width="100%"/>
+      <br/>
+      <strong>🛠️ Admin – Product Management</strong>
+      <br/>
+      <em>Admin dashboard for managing products</em>
+    </td>
+  </tr>
+</table>
 
 ---
 

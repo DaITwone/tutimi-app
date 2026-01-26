@@ -206,8 +206,11 @@ export default function MenuScreen() {
                   const hasSale = item.sale_price && item.sale_price < item.price;
                   const imageUrl = getPublicImageUrl(item.image);
 
+                  const isActive = item.is_active ?? true;
+
                   return (
                     <Pressable
+                      disabled={!isActive}
                       onPress={() =>
                         router.push({
                           pathname: "/product/[id]",
@@ -215,6 +218,7 @@ export default function MenuScreen() {
                         })
                       }
                       className="flex-row px-4 mb-5"
+                      style={{ opacity: isActive ? 1 : 0.45 }}
                     >
                       {/* IMAGE */}
                       {imageUrl && (
@@ -227,18 +231,11 @@ export default function MenuScreen() {
 
                       {/* INFO */}
                       <View className="flex-1">
-                        <Text
-                          className="font-semibold text-base text-[#1F4171]"
-                          numberOfLines={2}
-                        >
+                        <Text className="font-semibold text-base text-[#1F4171]" numberOfLines={2}>
                           {item.name}
                         </Text>
 
-                        {item.stats && (
-                          <Text className="text-gray-400 text-xs mt-1">
-                            {item.stats}
-                          </Text>
-                        )}
+                        {item.stats && <Text className="text-gray-400 text-xs mt-1">{item.stats}</Text>}
 
                         <View className="flex-row items-center mt-2">
                           {hasSale && (
@@ -252,10 +249,21 @@ export default function MenuScreen() {
                         </View>
                       </View>
 
-                      {/* ADD */}
-                      <View className="w-8 h-8 bg-[#1F4171] rounded-md items-center justify-center">
-                        <Text className="text-white text-xl font-bold">+</Text>
-                      </View>
+                      {/* ADD / SOLD OUT */}
+                      {isActive ? (
+                        <Pressable
+                          onPress={() => {
+                            // add to cart
+                          }}
+                          className="w-8 h-8 bg-[#1F4171] rounded-md items-center justify-center"
+                        >
+                          <Text className="text-white text-xl font-bold">+</Text>
+                        </Pressable>
+                      ) : (
+                        <View className="w-16 h-8 bg-gray-300 rounded-lg items-center justify-center">
+                          <Text className="text-gray-700 text-xs">Tạm Hết</Text>
+                        </View>
+                      )}
                     </Pressable>
                   );
                 }}

@@ -7,6 +7,7 @@ export type Product = {
   price: number;
   sale_price: number | null;
   image: string | null;
+  is_active: boolean | null;
 };
 
 export type MenuSection = {
@@ -26,7 +27,8 @@ export async function fetchMenu(): Promise<MenuSection[]> {
         stats,
         price,
         sale_price,
-        image
+        image,
+        is_active
       )
     `)
     .order("sort_order", { ascending: true });

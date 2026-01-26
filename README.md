@@ -1,6 +1,6 @@
 # ☕ TUTIMI Coffee & Tea App
 
-> Mobile storefront with admin CMS built using **React Native**, **Expo**, **TypeScript**, and **Supabase**
+> Mobile storefront with in-app admin CMS built using **React Native**, **Expo**, **TypeScript**, **Supabase** and **NativeWind**
 
 🎬 Demo Videos (Tap icon to watch)
 
@@ -14,10 +14,11 @@
 
 ## 🎯 What This Is
 
-A production-ready mobile app that lets customers browse products and enables store owners to manage content directly from their phone—no separate admin website needed.
+A mobile ordering app for a coffee & tea shop, including both a customer storefront and in-app admin tools for daily operations.
 
-**Customer features:** Browse menu, save favorites, view vouchers, check promotions  
-**Admin features:** Full CRUD for products, banners, news, and vouchers with image upload
+**Customer features:** Browse menu, save favorites, use vouchers, manage profile, and read news with Home notifications.
+**Admin features:** Toggle product/voucher availability, update theme/branding, and manage orders (confirm / complete / cancel).
+Advanced permissions and large-scale management are handled via a separate web dashboard.
 
 ---
 
@@ -95,7 +96,10 @@ UI/UX:     Gesture handlers, animations, responsive layouts
 
 ### Admin CMS
 - Dashboard with animated stats
-- Full CRUD for products, news, vouchers, banners
+- Product management (CRUD + availability on/off)
+- Voucher management (CRUD + active/inactive toggle)
+- Order processing workflow (confirm / complete / cancel)
+- Theme / branding customization
 - Image upload via Expo ImagePicker + Supabase Storage
 - Swipeable list actions for quick edits
 - Role-gated access control

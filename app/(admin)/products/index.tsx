@@ -267,7 +267,7 @@ export default function AdminProducts() {
               onConfirm: () => toggleProductActive(item),
             });
           }}
-          className={`h-full w-16 items-center justify-center ${isActive ? "bg-red-600" : "bg-green-600"
+          className={`h-full w-14 items-center justify-center ${isActive ? "bg-red-600" : "bg-green-600"
             }`}
           style={{
             borderTopRightRadius: 16,

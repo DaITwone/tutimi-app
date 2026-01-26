@@ -261,7 +261,7 @@ export default function MenuScreen() {
                         </Pressable>
                       ) : (
                         <View className="w-16 h-8 bg-gray-300 rounded-lg items-center justify-center">
-                          <Text className="text-gray-700 text-xs">Tạm Hết</Text>
+                          <Text className="text-gray-700 text-xs">Tạm hết</Text>
                         </View>
                       )}
                     </Pressable>

@@ -16,8 +16,8 @@
 
 A mobile ordering app for a coffee & tea shop, including both a customer storefront and in-app admin tools for daily operations.
 
-**Customer features:** Browse menu, save favorites, use vouchers, manage profile, and read news with Home notifications.
-**Admin features:** Toggle product/voucher availability, update theme/branding, and manage orders (confirm / complete / cancel).
+**Customer features:** Browse menu, save favorites, use vouchers, manage profile, and read news with Home notifications
+**Admin features:** Toggle product/voucher availability, update theme/branding, and manage orders (confirm / complete / cancel)
 Advanced permissions and large-scale management are handled via a separate web dashboard.
 
 ---

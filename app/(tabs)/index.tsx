@@ -285,19 +285,19 @@ export default function HomeScreen() {
                                                     return (
                                                         <Pressable
                                                             key={item.id}
-                                                            className="mr-4 w-40 shadow-md"
+                                                            className="w-40 mr-4"
                                                             onPress={() =>
                                                                 router.push({
                                                                     pathname: "/product/[id]",
                                                                     params: { id: item.id },
-
                                                                 })
                                                             }
                                                         >
                                                             {imageUrl && (
                                                                 <Image
                                                                     source={{ uri: imageUrl }}
-                                                                    className="w-full h-44 rounded-2xl"
+                                                                    className="w-full h-44 rounded-xl shadow-sm -ml-6"
+                                                                    resizeMode="cover"
                                                                 />
                                                             )}
 
@@ -311,6 +311,7 @@ export default function HomeScreen() {
                                                                     : `${item.price.toLocaleString()}đ`}
                                                             </Text>
                                                         </Pressable>
+
                                                     );
                                                 })}
                                             </ScrollView>

@@ -1,243 +1,128 @@
 # ☕ TUTIMI Coffee & Tea App
 
-> A mobile-first application built with Expo, React Native, TypeScript, and Supabase.
+> Mobile storefront with admin CMS built using **React Native**, **Expo**, **TypeScript**, and **Supabase**
 
-The project focuses on practical frontend development: navigation, data fetching, image handling, admin CRUD flows, and UX details commonly found in real-world mobile products.
+🎬 Demo Videos (Tap icon to watch)
 
----
-
-## 📋 Project Overview
-
-The app includes three main areas:
-
-**Customer-facing storefront**
-- Home, menu, product details, and news
-
-**User account**
-- Favorites, vouchers, and user information
-
-**Admin interface**
-- Manage products, banners, themes, news, and vouchers
-
-Data is powered by Supabase (Postgres + Auth + Storage), while routing and layouts are handled using Expo Router. The UI prioritizes clarity, responsiveness, and smooth interactions over visual complexity.
+- [🔐](https://drive.google.com/file/d/10jDW6RcvfwlruKamahgt5aByfQ2Pw_yu/view) Signup Flow (OTP Verification + Set Password)
+- [🛒](https://drive.google.com/file/d/14uYz3C_pYx09GCXaqdJyGtfaOYq0sner/view?usp=drive_link) Customer Journey: Browse Menu → Add to Cart → Place Order
+- [📦](https://drive.google.com/file/d/15IWfKgCDY2buCUuG2zjG34kwmC5NQ9KH/view) Order Workflow: Confirm / Complete / Cancel
+- [📴](https://drive.google.com/file/d/1B1kHhCzi7S0HGuSL0c2FoY7MX8HOi4Sl/view) Admin - Toggle Product Availability (On/Off + Toggle All)
+- [🛠️](https://drive.google.com/file/d/1Rcx9DTd3y3rrBF08F4t4-diwhZPDHNwZ/view) Admin Dashboard Overview (In-App Admin Tools)
 
 ---
 
-## 💡 What Problem This App Solves
+## 🎯 What This Is
 
-- Provides a lightweight mobile storefront for browsing beverages and promotions.
-- Allows store owners to manage content directly in the app without a separate admin website.
-- Demonstrates a complete frontend workflow: UI rendering, API integration, image storage, role-gated admin screens, and UX handling.
+A production-ready mobile app that lets customers browse products and enables store owners to manage content directly from their phone—no separate admin website needed.
 
----
-
-## 👥 Who It's For
-
-- Small cafés or pop-up stores needing a simple mobile app.
-- Recruiters and developers reviewing a junior frontend project with real backend integration.
+**Customer features:** Browse menu, save favorites, view vouchers, check promotions  
+**Admin features:** Full CRUD for products, banners, news, and vouchers with image upload
 
 ---
 
-## 🎯 Why This Project Exists
+## 💼 Why This Matters
 
-### Learning goals
-- Mobile navigation with Expo Router
-- Supabase integration (auth, database, storage)
-- Reusable hooks and service-based logic
-- UX-focused interaction patterns
+This project demonstrates:
+- **End-to-end mobile development** from UI to backend integration
+- **Real-world UX patterns** like swipe actions, loading states, and gesture handling
+- **Clean architecture** with hooks, services, and proper separation of concerns
+- **Production skills** including auth flows, image storage, and role-based access
 
-### Real-world relevance
-Shows how a single developer can design and build a usable mobile app with admin functionality.
-
----
-
-## ✨ Key Features
-
-### Storefront & Account
-- Mobile-first layouts using React Native and Nativewind
-- Banner carousel with snapping and indicators
-- Category-based menu using SectionList
-- Favorites linked to product data
-- Voucher eligibility checks
-- Auth flows with focus-based refresh
-
-### Admin
-- Dashboard with animated counters
-- CRUD flows for products, vouchers, news, and themes
-- Image upload via Expo ImagePicker + Supabase Storage
-- Swipeable list actions using gesture-based UI
-
----
-
-## 🏗️ Frontend Architecture & UX
-
-- Clear separation of concerns using hooks and services
-- Explicit loading and error states
-- SafeAreaView usage and responsive layouts
-- Animations to improve perceived performance and usability
+Built by one developer to show readiness for frontend/mobile roles.
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Technology | Purpose |
-|------------|---------|
-| **React Native + Expo** | Mobile-first UI and native APIs |
-| **Expo Router** | File-based routing with nested layouts |
-| **TypeScript** | Safer data handling and refactoring |
-| **Supabase** | Auth, relational data, and image storage |
-| **Nativewind** | Utility-based styling |
-| **react-native-gesture-handler** | Swipe and gesture interactions |
-| **AsyncStorage** | Lightweight local persistence |
-
-These tools were chosen to focus on product behavior and UX rather than custom backend infrastructure.
+```
+Frontend:  React Native + Expo + TypeScript + Nativewind
+Backend:   Supabase (Auth + Database + Storage)
+Routing:   Expo Router (file-based)
+State:     React hooks + AsyncStorage
+UI/UX:     Gesture handlers, animations, responsive layouts
+```
 
 ---
 
-## 📁 Project Structure
+## 📸 Screenshots
+
+| Customer Home | Product Menu |
+|:---:|:---:|
+| ![Home Screen](./docs/screenshots/home.PNG) | ![Menu Screen](./docs/screenshots/menu.PNG) |
+| **🏠 Customer Home** | **📋 Product Menu** |
+
+| Theme Settings | Admin Dashboard |
+|:---:|:---:|
+| ![Theme](./docs/screenshots/theme.PNG) | ![Admin](./docs/screenshots/admin-products.PNG) |
+| **🎨 Theme Settings** | **🛠️ Admin Dashboard** |
+
+---
+
+## ✨ Key Features
+
+### Customer App
+- Banner carousel with snap scrolling
+- Category-filtered product menu (SectionList)
+- Favorites system with real-time sync
+- Voucher eligibility checking
+- Theme customization
+
+### Admin CMS
+- Dashboard with animated stats
+- Full CRUD for products, news, vouchers, banners
+- Image upload via Expo ImagePicker + Supabase Storage
+- Swipeable list actions for quick edits
+- Role-gated access control
+
+---
+
+## 🏗️ Architecture Highlights
 
 ```
 app/
-  (tabs)/      # Customer-facing screens
-  (admin)/     # Admin routes and layouts
-  (auth)/      # Authentication flows
-  _layout.tsx  # Root providers and navigation
+  (tabs)/      → Customer-facing screens
+  (admin)/     → Admin-only routes
+  (auth)/      → Login/signup flows
 
-hooks/         # Reusable hooks (theme, branding, notifications)
-services/      # Business logic (e.g. voucher rules)
-lib/           # Shared utilities (Supabase client)
-assets/        # Images and branding
+hooks/         → Reusable logic (theme, branding)
+services/      → Business rules (voucher eligibility)
+lib/           → Supabase client config
 ```
 
-### Why This Structure Works
-- Route grouping mirrors real product surfaces.
-- Hooks keep components focused on rendering and UX.
-- Services isolate business logic from UI.
-- Admin and user flows are clearly separated for maintainability.
+**Design principles:**
+- Business logic separated from UI components
+- Explicit loading/error/empty states
+- Layout-based routing for role separation
+- Mobile-first responsive design
 
 ---
 
-## 🔧 Notable Technical Decisions
+## 🚀 Quick Start
 
-**Hooks & services for separation of concerns**
-- Business rules (e.g. voucher eligibility) live outside UI components.
-
-**Layout-based routing**
-- Nested layouts simplify role-based navigation and shared UI.
-
-**Direct backend integration**
-- Supabase is used for queries, joins, auth, and file storage.
-
-**UX-driven logic**
-- Loading, error, and empty states are handled explicitly.
-- Gesture-based interactions reduce UI clutter on mobile.
-
-**Lifecycle awareness**
-- Cleanup of listeners and mounted checks to avoid memory leaks.
-
-**Pragmatic tradeoffs**
-- Simple Alert-based error handling with clear paths for future improvement.
-
----
-
-# 📱 Demo & Screenshots
-
-## 🎥 Video Demo
-
-<div align="center">
-
-👉 [**Watch The Demo Video**](https://drive.google.com/file/d/18pcMsNR4m7o4B77V0esO-VlOrK9AyPRx/view?usp=sharing) 👈
-
-</div>
-
----
-
-## 📸 Application Screenshots
-
-<table>
-  <tr>
-    <td width="50%" align="center">
-      <img src="./docs/screenshots/home.PNG" alt="Home Screen" width="100%"/>
-      <br/>
-      <strong>🏠 Home</strong>
-      <br/>
-      <em>Main interface with banners and product categories</em>
-    </td>
-    <td width="50%" align="center">
-      <img src="./docs/screenshots/menu.PNG" alt="Menu Screen" width="100%"/>
-      <br/>
-      <strong>📋 Menu</strong>
-      <br/>
-      <em>Product list with category-based filtering</em>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-      <img src="./docs/screenshots/theme.PNG" alt="Theme Customization" width="100%"/>
-      <br/>
-      <strong>🎨 Theme Customization</strong>
-      <br/>
-      <em>Change application theme and visual style</em>
-    </td>
-    <td width="50%" align="center">
-      <img src="./docs/screenshots/admin-products.PNG" alt="Admin Dashboard" width="100%"/>
-      <br/>
-      <strong>🛠️ Admin – Product Management</strong>
-      <br/>
-      <em>Admin dashboard for managing products</em>
-    </td>
-  </tr>
-</table>
-
-
----
-
-## 🚧 Limitations & Future Improvements
-
-- [ ] Extract shared UI components into a `components/` directory
-- [ ] Centralize helper utilities (e.g. image URL handling)
-- [ ] Improve error handling with a unified notification system
-- [ ] Add form validation and better field-level feedback
-- [ ] Introduce basic testing and CI
-- [ ] Clean up backup files
-- [ ] Improve accessibility and contrast
-- [ ] Harden role-based security using Supabase RLS
-
----
-
-## 🚀 Setup
-
-**1. Clone the repository**
-
-**2. Install dependencies**
 ```bash
+# Install dependencies
 npm install
-```
 
-**3. Create a Supabase project and set up required tables**
+# Set up Supabase project and configure .env:
+EXPO_PUBLIC_SUPABASE_URL=your_url
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your_key
 
-**4. Configure environment variables:**
-```
-EXPO_PUBLIC_SUPABASE_URL
-EXPO_PUBLIC_SUPABASE_ANON_KEY
-EXPO_PUBLIC_DEV_ADMIN (optional)
-```
-
-**5. Start the project:**
-```bash
+# Run app
 npx expo start
 ```
 
 ---
 
-## 🎓 What This Project Demonstrates
+## 🎓 What This Demonstrates
 
-- Solid foundation in mobile frontend development
-- Attention to UX details and interaction quality
-- Ability to integrate backend services and APIs
-- Clean separation of concerns and maintainable structure
-- Strong learning mindset and readiness for growth in a frontend role
+✅ Mobile-first development with React Native/Expo  
+✅ TypeScript for type-safe code  
+✅ Backend integration (auth, database, storage)  
+✅ Clean code architecture and separation of concerns  
+✅ UX-focused interactions (gestures, animations, states)  
+✅ Full-stack thinking (customer + admin flows)
 
 ---
 
-**Built with ❤️ using React Native & Supabase**
+**Built with ❤️ to showcase frontend mobile development skills**

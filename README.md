@@ -2,7 +2,7 @@
 
 > Mobile storefront with in-app admin CMS built using **React Native**, **Expo**, **TypeScript**, **Supabase** and **NativeWind**
 
-🎬 Demo Videos (Tap icon to watch)
+## 🎬 Demo Videos (Tap icon to watch)
 
 - [🔐](https://drive.google.com/file/d/10jDW6RcvfwlruKamahgt5aByfQ2Pw_yu/view) Signup Flow (OTP Verification + Set Password)
 - [🛒](https://drive.google.com/file/d/14uYz3C_pYx09GCXaqdJyGtfaOYq0sner/view?usp=drive_link) Customer Journey: Browse Menu → Add to Cart → Place Order

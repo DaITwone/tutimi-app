@@ -3,12 +3,6 @@ import { Image, ImageSourcePropType } from "react-native";
 import { supabase } from "@/lib/supabaseClient";
 
 /* ===============================
-   LOCAL FALLBACK ASSETS
-================================ */
-const LOCAL_BACKGROUND = require("@/assets/images/bg-local.png");
-const LOCAL_LOGO = require("@/assets/images/logo-local.png");
-
-/* ===============================
    IMAGE HELPER (SUPABASE)
 ================================ */
 const getPublicImageUrl = (path?: string | null) => {
@@ -32,19 +26,20 @@ export function useBrandingAssets() {
     const fetchBranding = async () => {
       try {
         const { data, error } = await supabase
-          .from("app_brandings")
-          .select("background_uri, logo_uri")
-          .eq("is_active", true)
-          .single();
+          .from("app_brandings")         
+          .select("background_uri, logo_uri") 
+          .eq("is_active", true)         
+          .single();                     
 
         if (!error && data && mounted) {
           setBackgroundUri(data.background_uri ?? null);
           setLogoUri(data.logo_uri ?? null);
         }
       } catch (e) {
-        // DB chết, ignore
+        // Có lỗi xảy ra hoặc không tìm thấy data
+        console.error("Fetch branding error:", e);
       } finally {
-        mounted && setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
@@ -56,20 +51,19 @@ export function useBrandingAssets() {
   }, []);
 
   /* ===============================
-     RESOLVE IMAGE SOURCE
+     RESOLVE IMAGE SOURCE (REMOTE ONLY)
   ================================ */
-  const backgroundUrl: ImageSourcePropType =
-    backgroundUri
-      ? { uri: getPublicImageUrl(backgroundUri) }
-      : LOCAL_BACKGROUND;
+  // Nếu có URI từ DB thì trả về object { uri }, nếu không thì trả về null
+  const backgroundUrl: ImageSourcePropType | null = backgroundUri
+    ? { uri: getPublicImageUrl(backgroundUri) as string }
+    : null;
 
-  const logoUrl: ImageSourcePropType =
-    logoUri
-      ? { uri: getPublicImageUrl(logoUri) }
-      : LOCAL_LOGO;
+  const logoUrl: ImageSourcePropType | null = logoUri
+    ? { uri: getPublicImageUrl(logoUri) as string }
+    : null;
 
   /* ===============================
-     PREFETCH REMOTE IMAGES ONLY
+     PREFETCH REMOTE IMAGES
   ================================ */
   useEffect(() => {
     const url = getPublicImageUrl(backgroundUri);

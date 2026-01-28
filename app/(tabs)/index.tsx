@@ -31,7 +31,7 @@ type HomeNews = {
 type Banner = {
     id: string;
     image: string; // path trong bucket banners
-    order: number;
+    created_at: string ;
 };
 
 type BestSellerProduct = {
@@ -85,9 +85,9 @@ export default function HomeScreen() {
         // 2. Lấy banner theo theme
         const { data } = await supabase
             .from("banners")
-            .select("id, image, order")
+            .select("id, image, created_at")
             .eq("theme_key", setting.active_theme_key)
-            .order("order", { ascending: true });
+            .order("created_at", { ascending: true });
 
         if (data) setBanners(data);
     }

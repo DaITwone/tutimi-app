@@ -41,9 +41,9 @@ export default function ThemeManager() {
   const fetchBannerPreview = async (themeKey: string) => {
     const { data } = await supabase
       .from("banners")
-      .select("id, image, order")
+      .select("id, image, created_at")
       .eq("theme_key", themeKey)
-      .order("order", { ascending: true });
+      .order("created_at", { ascending: true });
 
     setBannerPreview(data || []);
   };
